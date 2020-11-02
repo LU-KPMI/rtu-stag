@@ -90,4 +90,4 @@ rm "$f/stag-mwc/output_dir/kraken2/*.kraken"
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
 mv "$f/stag-mwc/output_dir" "${home_path}/outputs/${sample}_${datestamp}"
 rm -rf "$f" # clean up after myself
-rm -rf "/scratch/databases"
+rm -rf "/scratch/reinis01/databases"

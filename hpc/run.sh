@@ -27,8 +27,7 @@ fi
 cd ~/
 home_path="$PWD"
 taxon_db_path="/home/groups/lu_kpmi/databases/full_ref_bafp"
-bracken_db_path="/home/groups/lu_kpmi/databases/full_ref_bafp"
-human_ref_path="/home/groups/lu_kpmi/human_reference"
+human_ref_path="/home/groups/lu_kpmi/databases/human_reference"
 sample_path="/home/groups/lu_kpmi/sample_input/"
 resistome_path="/home/groups/lu_kpmi/groot_db/arg-annot_index"
 
