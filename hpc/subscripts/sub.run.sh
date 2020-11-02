@@ -27,6 +27,7 @@ f="/scratch/reinis01/reinis01_$sample"
 # we need to move to the scratch dir to keep us from nuking their network infrastructure
 cd "/scratch"
 rm -rf "$f" # clear out the folder in case this sample has already been on this node
+mkdir "reinis01"
 mkdir "$f"
 # copy the database folder over - just use scratch instead of using the sample dir
 rm -rf "/scratch/reinis01/databases"
