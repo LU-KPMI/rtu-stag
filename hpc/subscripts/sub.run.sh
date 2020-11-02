@@ -45,7 +45,7 @@ for fname in ${sample_path}${sample}_*.fq.gz; do # move both sample files
     cp $fname "$f/stag-mwc/input/$trimmed"
 done
 
-cp -r "${home_path}/kraken2" "/scratch/reinis01/kraken2"
+# cp -r "${home_path}/kraken2" "/scratch/reinis01/kraken2"
 
 cd "$f/stag-mwc"
 snakemake --use-conda --cores $threads
