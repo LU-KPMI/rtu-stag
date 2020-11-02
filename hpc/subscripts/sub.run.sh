@@ -29,12 +29,12 @@ cd "/scratch"
 rm -rf "$f" # clear out the folder in case this sample has already been on this node
 mkdir "$f"
 # copy the database folder over - just use scratch instead of using the sample dir
-rm -rf "/scratch/databases"
-if [ ! -d "/scratch/databases" ]; then # NB: thjs will cause issues if we ever want to update the databases
+rm -rf "${f}/databases"
+if [ ! -d "${f}/databases" ]; then # NB: thjs will cause issues if we ever want to update the databases
     mkdir /scratch/databases
-    cp -r "${human_ref_path}" "/scratch/databases"
-    cp -r "${taxon_db_path}" "/scratch/databases"
-    cp -r "${resistome_path}" "/scratch/databases"
+    cp -r "${human_ref_path}" "${f}/databases"
+    cp -r "${taxon_db_path}" "${f}/databases"
+    cp -r "${resistome_path}" "${f}/databases"
 fi
 
 cp -r "${home_path}/stag-mwc" "$f"
@@ -45,7 +45,7 @@ for fname in ${sample_path}${sample}_*.fq.gz; do # move both sample files
     cp $fname "$f/stag-mwc/input/$trimmed"
 done
 
-cp -r "${home_path}/kraken2" "/scratch"
+cp -r "${home_path}/kraken2" "${f}"
 
 cd "$f/stag-mwc"
 snakemake --use-conda --cores $threads
@@ -90,4 +90,4 @@ rm "$f/stag-mwc/output_dir/kraken2/*.kraken"
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
 mv "$f/stag-mwc/output_dir" "${home_path}/outputs/${sample}_${datestamp}"
 rm -rf "$f" # clean up after myself
-rm -rf "/scratch/reinis01/databases"
+# rm -rf "${f}/databases" # uncommenting for now to speed up testing
