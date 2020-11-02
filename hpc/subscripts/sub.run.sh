@@ -22,7 +22,7 @@ taxon_db_path="$3"
 human_ref_path="$4"
 sample_path="$5"
 resistome_path="$6"
-f="/scratch/kristaps_$sample"
+f="/scratch/reinis01_$sample"
 
 # we need to move to the scratch dir to keep us from nuking their network infrastructure
 cd "/scratch"
@@ -40,7 +40,7 @@ fi
 cp -r "${home_path}/stag-mwc" "$f"
 cp "${home_path}/rtu-stag/configs/config.hpc.yaml" "$f/stag-mwc/config.yaml" # changing the name to the default simplifies running
 mkdir "$f/stag-mwc/input"
-for fname in ${sample_path}*_${sample}_*.fq.gz; do # move both sample files
+for fname in ${sample_path}${sample}_*.fq.gz; do # move both sample files
     trimmed=$(echo $fname | grep -o '[0-9]\+_[0-9]\+\.fq\.gz')
     cp $fname "$f/stag-mwc/input/$trimmed"
 done
@@ -88,6 +88,6 @@ rm -rf "$f/stag-mwc/output_dir/host_removal/"
 rm "$f/stag-mwc/output_dir/kraken2/*.kraken"
 # save the output folder and free up the space taken
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
-mv "$f/stag-mwc/output_dir" "${home_path}/outputs/output_dir_${sample}_${datestamp}"
+mv "$f/stag-mwc/output_dir" "${home_path}/outputs/${sample}_${datestamp}"
 rm -rf "$f" # clean up after myself
 rm -rf "/scratch/databases"
