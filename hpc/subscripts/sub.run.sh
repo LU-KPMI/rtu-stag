@@ -27,16 +27,16 @@ f="/scratch/reinis01/reinis01_$sample"
 # we need to move to the scratch dir to keep us from nuking their network infrastructure
 cd "/scratch"
 rm -rf "$f" # clear out the folder in case this sample has already been on this node
-mkdir "reinis01"
-mkdir "$f"
-# copy the database folder over - just use scratch instead of using the sample dir
-rm -rf "/scratch/reinis01/databases"
-if [ ! -d "/scratch/reinis01/databases" ]; then # NB: thjs will cause issues if we ever want to update the databases
-    mkdir "/scratch/reinis01/databases"
-    cp -r "${human_ref_path}" "/scratch/reinis01/databases"
-    cp -r "${taxon_db_path}" "/scratch/reinis01/databases"
-    cp -r "${resistome_path}" "/scratch/reinis01/databases"
-fi
+# mkdir "reinis01"
+# mkdir "$f"
+# # copy the database folder over - just use scratch instead of using the sample dir
+# rm -rf "/scratch/reinis01/databases"
+# if [ ! -d "/scratch/reinis01/databases" ]; then # NB: thjs will cause issues if we ever want to update the databases
+#     mkdir "/scratch/reinis01/databases"
+#     cp -r "${human_ref_path}" "/scratch/reinis01/databases"
+#     cp -r "${taxon_db_path}" "/scratch/reinis01/databases"
+#     cp -r "${resistome_path}" "/scratch/reinis01/databases"
+# fi
 
 cp -r "${home_path}/stag-mwc" "$f"
 cp "${home_path}/rtu-stag/configs/config.hpc.yaml" "$f/stag-mwc/config.yaml" # changing the name to the default simplifies running
@@ -46,7 +46,7 @@ for fname in ${sample_path}${sample}_*.fq.gz; do # move both sample files
     cp $fname "$f/stag-mwc/input/$trimmed"
 done
 
-cp -r "${home_path}/kraken2" "/scratch/reinis01"
+cp -r "${home_path}/kraken2" "/scratch/reinis01/kraken2"
 
 cd "$f/stag-mwc"
 snakemake --use-conda --cores $threads
