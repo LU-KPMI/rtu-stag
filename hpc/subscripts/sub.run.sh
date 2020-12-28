@@ -27,21 +27,23 @@ f="/scratch/reinis01/reinis01_$sample"
 # we need to move to the scratch dir to keep us from nuking their network infrastructure
 cd "/scratch"
 rm -rf "$f" # clear out the folder in case this sample has already been on this nod
-mkdir "$f"
-# # copy the database folder over - just use scratch instead of using the sample dir
+mkdir -p "$f"
+# # copy the database folders over - just use scratch instead of using the sample dir
 # rm -rf "/scratch/reinis01/databases"
-# if [ ! -d "/scratch/reinis01/databases" ]; then # NB: thjs will cause issues if we ever want to update the databases
-#     mkdir "/scratch/reinis01/databases"
-#     cp -r "${human_ref_path}" "/scratch/reinis01/databases"
-#     cp -r "${taxon_db_path}" "/scratch/reinis01/databases"
-#     cp -r "${resistome_path}" "/scratch/reinis01/databases"
-# fi
+if [ ! -d "/scratch/reinis01/databases" ]; then # NB: this will cause issues if we ever want to update the databases
+    mkdir "/scratch/reinis01/databases"
+    cp -r "${human_ref_path}" "/scratch/reinis01/databases"
+    cp -r "${taxon_db_path}" "/scratch/reinis01/databases"
+    cp -r "${resistome_path}" "/scratch/reinis01/databases"
+fi
 
 cp -r "${home_path}/stag-mwc" "$f"
 cp "${home_path}/rtu-stag/configs/config.hpc.yaml" "$f/stag-mwc/config.yaml" # changing the name to the default simplifies running
 mkdir "$f/stag-mwc/input"
 for fname in ${sample_path}${sample}_*.fq.gz; do # move both sample files
     trimmed=$(echo $fname | grep -o '[0-9]\+_[0-9]\+\.fq\.gz')
+    trimmed2=$(echo $trimmed | grep -o "^[^_]*") # temporary fix until something better comes around
+
     cp $fname "$f/stag-mwc/input/$trimmed"
 done
 
@@ -85,9 +87,15 @@ fi
 rm -rf "$f/stag-mwc/output_dir/fastp/"
 rm -rf "$f/stag-mwc/output_dir/host_removal/"
 #rm -rf "$f/stag-mwc/output_dir/logs/" # <- logs weigh borderline nothing - may as well leave them in
-rm "$f/stag-mwc/output_dir/kraken2/*.kraken"
+rm "$f/stag-mwc/output_dir/kraken2/$trimmed2.kraken" # wildcard does not work here for some reason, so a temp fix is used
+
 # save the output folder and free up the space taken
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
 mv "$f/stag-mwc/output_dir" "${home_path}/outputs/${sample}_${datestamp}"
 rm -rf "$f" # clean up after myself
-# rm -rf "/scratch/reinis01/databases" # uncommenting for now to speed up testing
+mv "$sample_path/$sample*" "$sample_path/../analysed_samples/" 
+for file in ${sample_path}${sample}_*.fq.gz; do # move both raw analysed sample files to another directory to ease file handling
+    mv $file "$sample_path/../analysed_samples/"
+done
+
+# rm -rf "/scratch/reinis01/databases" # uncommenting for now to speed up analysis
