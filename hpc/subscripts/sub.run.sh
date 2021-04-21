@@ -45,7 +45,6 @@ sed "s:BASE_PATH:${prefix}:g" < "${home_path}/rtu-stag/configs/config.hpc.yaml" 
 mkdir "$f/stag-mwc/input"
 for fname in ${sample_path}${sample}_*.fq.gz; do # move both sample files
     trimmed=$(echo $fname | grep -o '[0-9]\+_[0-9]\+\.fq\.gz')
-    trimmed2=$(echo $trimmed | grep -o "^[^_]*") # temporary fix until something better comes around
     cp $fname "$f/stag-mwc/input/$trimmed"
 done
 
@@ -89,7 +88,7 @@ fi
 #rm -rf "$f/stag-mwc/output_dir/fastp/"
 rm -rf "$f/stag-mwc/output_dir/host_removal/"
 #rm -rf "$f/stag-mwc/output_dir/logs/" # <- logs weigh borderline nothing - may as well leave them in
-rm "$f/stag-mwc/output_dir/kraken2/$trimmed2.kraken" # wildcard does not work here for some reason, so a temp fix is used
+rm "$f"/stag-mwc/output_dir/kraken2/*.kraken
 
 # save the output folder and free up the space taken
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
