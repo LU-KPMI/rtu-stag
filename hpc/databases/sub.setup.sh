@@ -5,6 +5,8 @@
 #PBS -q long
 #PBS -j oe
 
+## IMPORTANT: This is currently unused and I have no idea if this works
+
 # how many threads do we have?
 threads=8
 pull_kraken=false # NB - this takes a while to run and kraken2 has a habit of failing silently

@@ -10,7 +10,7 @@ REMOTEDIR="/home"
 USER=`awk  -F, '{print $1}' /mnt/home/groups/lu_kpmi/archive/mgi_lftp_user-pass_cred/cred.txt`
 PASS=`awk  -F, '{print $2}' /mnt/home/groups/lu_kpmi/archive/mgi_lftp_user-pass_cred/cred.txt`
 #REGEX="*.txt"
-#LOG="/mnt/home/reinis01/tests/script.log"
+#LOG="${HOME}/tests/script.log"
 
 #cd $LOCALDIR
 #if [  ! $? -eq 0 ]; then

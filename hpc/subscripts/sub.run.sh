@@ -41,7 +41,7 @@ if [ ! -d "${prefix}/databases" ]; then # NB: this will cause issues if we ever 
 fi
 
 cp -r "${home_path}/stag-mwc" "$f"
-sed "s:BASE_PATH:${prefix}:g" < "${home_path}/rtu-stag/configs/config.hpc.yaml" > "$f/stag-mwc/config.yaml" # changing the name to the default simplifies running
+sed "s:BASE_PATH:${prefix}:g" < "${home_path}/rtu-stag/hpc/config.yaml" > "$f/stag-mwc/config.yaml"
 mkdir "$f/stag-mwc/input"
 for fname in ${sample_path}${sample}_*.fq.gz; do # move both sample files
     trimmed=$(echo $fname | grep -o '[0-9]\+_[0-9]\+\.fq\.gz')
@@ -52,7 +52,7 @@ cp -r "${home_path}/kraken2" "${prefix}"
 
 cd "$f/stag-mwc"
 snakemake --use-conda --cores $threads
-cd ../.. # move back into the base dir
+cd ${prefix}
 if [ "$run_humann" = true ] ; then
     # run the humann2 stuff outside of stag - just ripping the whole thing to deal with dep conflicts between humann2 and snakemake
     humann2_dir="$f/stag-mwc/output_dir/humann2/"
