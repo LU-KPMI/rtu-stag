@@ -44,7 +44,6 @@ Not yet :(
   * `hpc/databases`: holds scripts for database build
   * `hpc/subscripts`: Contains job scripts that will be queued up for running on the cluster
 * `downstream`: nothing here, but it will hold scripts that will do actual statistics on generated outputs
-* `old_stuff`: no idea what is there
 
 # Notes
 
