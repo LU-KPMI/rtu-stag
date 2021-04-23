@@ -1,15 +1,8 @@
 #!/bin/bash
 
-# future develop:
-# simplify the script!
-# implement checksum comparing.
+# This currently depends on hand-currated files sample_list*.csv.
+# TODO: automate?
 
-# Install dependencies (currently only pv)
-#pkgs='pv'
-#if ! dpkg -s $pkgs >/dev/null 2>&1; then
-#  # sudo apt install $pkgs
-#  exit "pipe-viewer not installed, please run 'sudo apt install pv' to continue"
-#fi
 
 # This invokes screen if not already inside a screen which invokes /bin/bash, which invokes the script again.
 if [ -z "$STY" ]; then exec screen -dm -S lftp-file-transfer /bin/bash "$0"; fi
