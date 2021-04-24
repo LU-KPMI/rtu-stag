@@ -17,7 +17,7 @@ conda init bash
 conda activate stag-mwc
 
 sample="$1" # that should contain the sample nums
-home_path="$2"
+work_path="$2"
 taxon_db_path="$3"
 human_ref_path="$4"
 sample_path="$5"
@@ -25,8 +25,7 @@ resistome_path="$6"
 prefix="/scratch/$(whoami)"
 f="${prefix}/$(whoami)_$sample"
 
-# we need to move to the scratch dir to keep us from nuking their network infrastructure
-cd "/scratch"
+# Use scratch dir to keep us from nuking their network infrastructure
 rm -rf "$f" # clear out the folder in case this sample has already been on this nod
 mkdir -p "$f"
 # # copy the database folders over - just use scratch instead of using the sample dir
@@ -40,15 +39,12 @@ if [ ! -d "${prefix}/databases" ]; then # NB: this will cause issues if we ever 
     cp -r "${resistome_path}" "${prefix}/databases"
 fi
 
-cp -r "${home_path}/stag-mwc" "$f"
-sed "s:BASE_PATH:${prefix}:g" < "${home_path}/rtu-stag/hpc/config.yaml" > "$f/stag-mwc/config.yaml"
+cp -r "${work_path}/stag-mwc" "$f"
+sed "s:BASE_PATH:${prefix}:g" < "${work_path}/rtu-stag/hpc/config.yaml" > "$f/stag-mwc/config.yaml"
 mkdir "$f/stag-mwc/input"
-for fname in ${sample_path}${sample}_*.fq.gz; do # move both sample files
-    trimmed=$(echo $fname | grep -o '[0-9]\+_[0-9]\+\.fq\.gz')
-    cp $fname "$f/stag-mwc/input/$trimmed"
-done
+cp ${sample_path}/${sample}_*.fq.gz "$f/stag-mwc/input/"
 
-cp -r "${home_path}/kraken2" "${prefix}"
+cp -r "${work_path}/kraken2" "${prefix}"
 
 cd "$f/stag-mwc"
 snakemake --use-conda --cores $threads
@@ -99,6 +95,6 @@ mv "$f/stag-mwc/output_dir" "$sample_path/../outputs/${sample}_${datestamp}"
 rm -rf "$f" # clean up after myself
 
 # Move both raw analysed sample files to another directory to ease file handling
-#for file in ${sample_path}${sample}_*.fq.gz; do
+#for file in ${sample_path}/${sample}_*.fq.gz; do
 #    mv $file "$sample_path/../analysed_samples/"
 #done

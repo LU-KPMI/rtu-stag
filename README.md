@@ -8,15 +8,16 @@ These scripts can be run only on RTU HPC. Running them locally is not supported 
 
 This assumes all databases are already built on HPC and are more or less up-to-date, and there are some samples in `/home/groups/lu_kpmi/renamed_samples`.
 
-* Go to your home directory
+* Create a work directory (you can name it however you want) and `cd` to it
 ```
-cd ~
+mkdir work
+cd work
 ```
 * Clone the repository
 ```
 git clone https://github.com/kcivkulis/rtu-stag.git
 ```
-* Go into the `hpc` folder
+* Go to the `hpc` folder
 ```
 cd rtu-stag/hpc
 ```
