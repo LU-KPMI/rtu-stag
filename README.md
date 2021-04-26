@@ -6,6 +6,19 @@ These scripts can be run only on RTU HPC. Running them locally is not supported 
 
 # How to use
 
+## Preprocessing
+
+Use scripts located in `upstream/` subfolder.
+
+* `sync_with_mgi.sh` fetches new raw data from MGI.
+* `rename_samples.sh` concatenates and renames them according to info in `sample_list_data/` group subfolder.
+
+## Building databases
+
+Not yet :(
+
+## Main process
+
 This assumes all databases are already built on HPC and are more or less up-to-date, and there are some samples in `/home/groups/lu_kpmi/renamed_samples`.
 
 * Create a work directory (you can name it however you want) and `cd` to it
@@ -34,7 +47,7 @@ cd rtu-stag/hpc
 ./run.sh
 ```
 
-# Building databases
+## Analysis
 
 Not yet :(
 
@@ -48,4 +61,4 @@ Not yet :(
 
 # Notes
 
-The scripts have been made for use in the [Universities of Latvia Institute of Clinical and Preventitive Medicine](https://www.kpmi.lu.lv/en-gb/).
+The scripts have been made for use in the [Institute of Clinical and Preventive Medicine of the University of Latvia](https://www.kpmi.lu.lv/en-gb/).

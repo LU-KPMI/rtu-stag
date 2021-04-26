@@ -22,16 +22,16 @@ taxon_db_path="$3"
 human_ref_path="$4"
 sample_path="$5"
 resistome_path="$6"
+output_path="$7"
 prefix="/scratch/$(whoami)"
 f="${prefix}/$(whoami)_$sample"
 
 # Use scratch dir to keep us from nuking their network infrastructure
 rm -rf "$f" # clear out the folder in case this sample has already been on this nod
 mkdir -p "$f"
+
 # # copy the database folders over - just use scratch instead of using the sample dir
 # rm -rf "${prefix}/databases"
-# cp -r "${taxon_db_path}" "${prefix}/databases"
-
 if [ ! -d "${prefix}/databases" ]; then # NB: this will cause issues if we ever want to update the databases
     mkdir "${prefix}/databases"
     cp -r "${human_ref_path}" "${prefix}/databases"
@@ -39,15 +39,18 @@ if [ ! -d "${prefix}/databases" ]; then # NB: this will cause issues if we ever 
     cp -r "${resistome_path}" "${prefix}/databases"
 fi
 
+# Copy stag, samples and config file
 cp -r "${work_path}/stag-mwc" "$f"
 sed "s:BASE_PATH:${prefix}:g" < "${work_path}/rtu-stag/hpc/config.yaml" > "$f/stag-mwc/config.yaml"
 mkdir "$f/stag-mwc/input"
 cp ${sample_path}/${sample}_*.fq.gz "$f/stag-mwc/input/"
 
+# Copy kraken2
 cp -r "${work_path}/kraken2" "${prefix}"
 
+# Launch stag
 cd "$f/stag-mwc"
-snakemake --use-conda --cores $threads
+snakemake --use-conda --cores $threads || exit 1 # Exit if stag fails
 
 cd ${prefix}
 if [ "$run_humann" = true ] ; then
@@ -91,7 +94,8 @@ rm "$f"/stag-mwc/output_dir/kraken2/*.kraken
 
 # Save the output folder and free up the space taken
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
-mv "$f/stag-mwc/output_dir" "$sample_path/../outputs/${sample}_${datestamp}"
+mv "$f/stag-mwc/output_dir" "$output_path/${sample}_${datestamp}"
+chmod g+w -R "$output_path/${sample}_${datestamp}"
 rm -rf "$f" # clean up after myself
 
 # Move both raw analysed sample files to another directory to ease file handling
