@@ -16,14 +16,14 @@ source /opt/exp_soft/conda/anaconda3/etc/profile.d/conda.sh
 conda init bash
 conda activate stag-mwc
 
-sample="$1" # that should contain the sample nums
+sample="$1" # that should contain the sample names
 work_path="$2"
 taxon_db_path="$3"
 human_ref_path="$4"
 sample_path="$5"
 resistome_path="$6"
 output_path="$7"
-prefix="/scratch/$(whoami)"
+export prefix="/scratch/$(whoami)"
 f="${prefix}/$(whoami)_$sample"
 
 # Use scratch dir to keep us from nuking their network infrastructure
@@ -41,7 +41,11 @@ fi
 
 # Copy stag, samples and config file
 cp -r "${work_path}/stag-mwc" "$f"
-sed "s:BASE_PATH:${prefix}:g" < "${work_path}/rtu-stag/hpc/config.yaml" > "$f/stag-mwc/config.yaml"
+export ENABLE_QC_READS=True
+export ENABLE_HOST_REMOVAL=True
+export ENABLE_KRAKEN2=True
+export ENABLE_GROOT=True
+envsubst < "${work_path}/rtu-stag/hpc/config.yaml" > "$f/stag-mwc/config.yaml"
 mkdir "$f/stag-mwc/input"
 cp ${sample_path}/${sample}_*.fq.gz "$f/stag-mwc/input/"
 

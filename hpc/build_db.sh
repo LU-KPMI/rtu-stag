@@ -56,7 +56,12 @@ kraken2/kraken2-build --build --db human_reference --threads 32
 # # set up the new stag instance that we'll be using
 # mkdir -p process/process_func_db
 # cp -r stag-mwc process/process_func_db/stag-mwc
-# cp rtu-stag/configs/config.db.hpc.yaml process/process_func_db/stag-mwc/config.yaml # changing the name to the default simplifies running
+# export ENABLE_QC_READS=False
+# export ENABLE_HOST_REMOVAL=False
+# export ENABLE_KRAKEN2=False
+# export ENABLE_GROOT=False
+# export prefix=""
+# envsubst < rtu-stag/configs/config.hpc.yaml > process/process_func_db/stag-mwc/config.yaml # changing the name to the default simplifies running
 #
 # # making fake input files to make stag happy (it throws errors without a sample to work with)
 # cd process/process_func_db/stag-mwc
