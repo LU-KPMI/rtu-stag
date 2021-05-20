@@ -37,3 +37,15 @@ conda config --add channels bioconda
 conda config --add channels conda-forge
 # pipe yes into the install to silence prompts
 echo "y" | conda install -c bioconda -c conda-forge humann2==2.8.1 
+
+# Setup R environment
+echo "y" | conda create --name R
+conda activate R
+# Add needed channels
+conda config --add channels defaults
+conda config --add channels bioconda
+conda config --add channels conda-forge
+echo "y" | conda install -c bioconda R
+Rscript -e 'install.packages("BiocManager", repos="https://cloud.r-project.org/")'
+Rscript -e 'BiocManager::install()'
+Rscript -e 'BiocManager::install("phyloseq")'

@@ -27,3 +27,6 @@ cd kraken2
 cd ..
 rm -rf kraken2
 mv kraken2_installed kraken2
+
+# Download kraken-biom
+git clone https://github.com/casperp/kraken-biom kraken-biom

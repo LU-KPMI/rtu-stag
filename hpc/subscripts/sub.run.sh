@@ -99,6 +99,7 @@ rm "$f"/stag-mwc/output_dir/kraken2/*.kraken
 # Save the output folder and free up the space taken
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
 mv "$f/stag-mwc/output_dir" "$output_path/${sample}_${datestamp}"
+cp "$f/stag-mwc/config.yaml" "$output_path/${sample}_${datestamp}" # Config file might be useful for downstream analysis
 chmod g+w -R "$output_path/${sample}_${datestamp}"
 rm -rf "$f" # clean up after myself
 
