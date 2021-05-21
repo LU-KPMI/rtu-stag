@@ -38,7 +38,7 @@ functional_profile:
     humann2: False
 antibiotic_resistance:
     groot: ${ENABLE_GROOT}
-    amrplusplus: False
+    amrplusplus: ${ENABLE_AMRPLUSPLUS}
 mappers:
     bbmap: False
     bowtie2: False

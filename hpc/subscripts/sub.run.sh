@@ -16,15 +16,16 @@ source /opt/exp_soft/conda/anaconda3/etc/profile.d/conda.sh
 conda init bash
 conda activate stag-mwc
 
-sample="$1" # that should contain the sample names
-work_path="$2"
-taxon_db_path="$3"
-human_ref_path="$4"
-sample_path="$5"
-resistome_path="$6"
-output_path="$7"
+name="$1" # Both reads will be renamed to $name_1.fq.gz and $name_2.fq.gz
+read_1="$2" # Pathname for 1st read
+read_2="$3" # Pathname for 2nd read
+work_path="$4"
+taxon_db_path="$5"
+human_ref_path="$6"
+resistome_path="$7"
+output_path="$8"
 export prefix="/scratch/$(whoami)"
-f="${prefix}/$(whoami)_$sample"
+f="${prefix}/$(whoami)_$name"
 
 # Use scratch dir to keep us from nuking their network infrastructure
 rm -rf "$f" # clear out the folder in case this sample has already been on this nod
@@ -45,9 +46,11 @@ export ENABLE_QC_READS=True
 export ENABLE_HOST_REMOVAL=True
 export ENABLE_KRAKEN2=True
 export ENABLE_GROOT=True
+export ENABLE_AMRPLUSPLUS=True
 envsubst < "${work_path}/rtu-stag/hpc/config.yaml" > "$f/stag-mwc/config.yaml"
 mkdir "$f/stag-mwc/input"
-cp ${sample_path}/${sample}_*.fq.gz "$f/stag-mwc/input/"
+cp $read_1 "$f/stag-mwc/input/${name}_1.fq.gz"
+cp $read_2 "$f/stag-mwc/input/${name}_2.fq.gz"
 
 # Copy kraken2
 cp -r "${work_path}/kraken2" "${prefix}"
@@ -98,12 +101,11 @@ rm "$f"/stag-mwc/output_dir/kraken2/*.kraken
 
 # Save the output folder and free up the space taken
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
-mv "$f/stag-mwc/output_dir" "$output_path/${sample}_${datestamp}"
-cp "$f/stag-mwc/config.yaml" "$output_path/${sample}_${datestamp}" # Config file might be useful for downstream analysis
-chmod g+w -R "$output_path/${sample}_${datestamp}"
+mv "$f/stag-mwc/output_dir" "$output_path/${name}_${datestamp}"
+cp "$f/stag-mwc/config.yaml" "$output_path/${name}_${datestamp}" # Config file might be useful for downstream analysis
+chmod g+w -R "$output_path/${name}_${datestamp}"
 rm -rf "$f" # clean up after myself
 
-# Move both raw analysed sample files to another directory to ease file handling
-#for file in ${sample_path}/${sample}_*.fq.gz; do
-#    mv $file "$sample_path/../analysed_samples/"
-#done
+# Copy both raw analysed sample files to another directory to ease file handling
+# cp $read_1 /home/groups/lu_kpmi/analysed_samples/
+# cp $read_2 /home/groups/lu_kpmi/analysed_samples/
