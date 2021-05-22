@@ -27,6 +27,10 @@ output_path="$8"
 export prefix="/scratch/$(whoami)"
 f="${prefix}/$(whoami)_$name"
 
+echo "On machine $HOSTNAME"
+echo "Start time" $(date)
+echo "Sample $name"
+
 # Use scratch dir to keep us from nuking their network infrastructure
 rm -rf "$f" # clear out the folder in case this sample has already been on this nod
 mkdir -p "$f"
@@ -93,19 +97,19 @@ if [ "$run_humann" = true ] ; then
     rm -rf "$f/stag-mwc/output_dir/humann2/*_humann2_temp/" # the 1 isn't supposed to be static - it corresponds with the sample num
 fi
 
+mkdir -pv "$output_path/$name"
 
-# Remove what is not needed for further analysis
-#rm -rf "$f/stag-mwc/output_dir/fastp/"
-rm -rf "$f/stag-mwc/output_dir/host_removal/"
-rm "$f"/stag-mwc/output_dir/kraken2/*.kraken
+# Remove what is not needed for further analysis and takes up a lot of space
+rm -rfv "$f/stag-mwc/output_dir/fastp/"
+rm -rfv "$f/stag-mwc/output_dir/host_removal/"
+rm -rfv "$f/stag-mwc/output_dir/amrplusplus/AlignToAMR/"
+rm -fv "$f/stag-mwc/output_dir/kraken2/$name.kraken"
 
 # Save the output folder and free up the space taken
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
-mv "$f/stag-mwc/output_dir" "$output_path/${name}_${datestamp}"
-cp "$f/stag-mwc/config.yaml" "$output_path/${name}_${datestamp}" # Config file might be useful for downstream analysis
-chmod g+w -R "$output_path/${name}_${datestamp}"
+mv "$f/stag-mwc/output_dir" "$output_path/$name/$datestamp"
+cp "$f/stag-mwc/config.yaml" "$output_path/$name/$datestamp" # Config file might be useful for downstream analysis
+chmod g+w -R "$output_path/$name/$datestamp"
 rm -rf "$f" # clean up after myself
 
-# Copy both raw analysed sample files to another directory to ease file handling
-# cp $read_1 /home/groups/lu_kpmi/analysed_samples/
-# cp $read_2 /home/groups/lu_kpmi/analysed_samples/
+echo "End time" $(date)
