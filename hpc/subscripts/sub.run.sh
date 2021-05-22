@@ -61,7 +61,8 @@ cp -r "${work_path}/kraken2" "${prefix}"
 
 # Launch stag
 cd "$f/stag-mwc"
-snakemake --use-conda --cores $threads || exit 1 # Exit if stag fails
+flock $prefix/conda_lock snakemake --use-conda --create-envs-only --conda-prefix=$prefix/conda_envs
+snakemake --use-conda --conda-prefix=$prefix/conda_envs --cores $threads || exit 1 # Exit if stag fails
 
 cd ${prefix}
 if [ "$run_humann" = true ] ; then
