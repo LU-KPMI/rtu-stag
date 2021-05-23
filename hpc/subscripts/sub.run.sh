@@ -35,14 +35,17 @@ echo "Sample $name"
 rm -rf "$f" # clear out the folder in case this sample has already been on this nod
 mkdir -p "$f"
 
-# # copy the database folders over - just use scratch instead of using the sample dir
-# rm -rf "${prefix}/databases"
-if [ ! -d "${prefix}/databases" ]; then # NB: this will cause issues if we ever want to update the databases
-    mkdir "${prefix}/databases"
-    cp -r "${human_ref_path}" "${prefix}/databases"
-    cp -r "${taxon_db_path}" "${prefix}/databases"
-    cp -r "${resistome_path}" "${prefix}/databases"
-fi
+{
+    flock 200 # Multiple jobs running on the same node can start copying database, therefore add a lock
+    # # copy the database folders over - just use scratch instead of using the sample dir
+    # rm -rf "${prefix}/databases"
+    if [ ! -d "${prefix}/databases" ]; then # NB: this will cause issues if we ever want to update the databases
+        mkdir "${prefix}/databases"
+        cp -r "${human_ref_path}" "${prefix}/databases"
+        cp -r "${taxon_db_path}" "${prefix}/databases"
+        cp -r "${resistome_path}" "${prefix}/databases"
+    fi
+} 200>$work_path/db_lock
 
 # Copy stag, samples and config file
 cp -r "${work_path}/stag-mwc" "$f"
