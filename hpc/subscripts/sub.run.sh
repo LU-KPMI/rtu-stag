@@ -24,6 +24,12 @@ taxon_db_path="$5"
 human_ref_path="$6"
 resistome_path="$7"
 output_path="$8"
+export ENABLE_QC_READS=$9
+export ENABLE_HOST_REMOVAL=${10}
+export ENABLE_KRAKEN2=${11}
+export ENABLE_GROOT=${12}
+export ENABLE_AMRPLUSPLUS=${13}
+export BRACKEN_TRESH=${14}
 export prefix="/scratch/$(whoami)"
 f="${prefix}/$(whoami)_$name"
 
@@ -49,11 +55,6 @@ mkdir -p "$f"
 
 # Copy stag, samples and config file
 cp -r "${work_path}/stag-mwc" "$f"
-export ENABLE_QC_READS=True
-export ENABLE_HOST_REMOVAL=True
-export ENABLE_KRAKEN2=True
-export ENABLE_GROOT=True
-export ENABLE_AMRPLUSPLUS=True
 envsubst < "${work_path}/rtu-stag/hpc/config.yaml" > "$f/stag-mwc/config.yaml"
 mkdir "$f/stag-mwc/input"
 cp $read_1 "$f/stag-mwc/input/${name}_1.fq.gz"
@@ -113,6 +114,9 @@ rm -fv "$f/stag-mwc/output_dir/kraken2/$name.kraken"
 datestamp=$(date -d "today" +"%Y%m%d%H%M")
 mv "$f/stag-mwc/output_dir" "$output_path/$name/$datestamp"
 cp "$f/stag-mwc/config.yaml" "$output_path/$name/$datestamp" # Config file might be useful for downstream analysis
+for v in ENABLE_QC_READS ENABLE_HOST_REMOVAL ENABLE_KRAKEN2 ENABLE_GROOT ENABLE_AMRPLUSPLUS BRACKEN_TRESH ; do
+    echo "$v=${!v}" >> "$output_path/$name/$datestamp/sub_params"
+done
 chmod g+w -R "$output_path/$name/$datestamp"
 rm -rf "$f" # clean up after myself
 
