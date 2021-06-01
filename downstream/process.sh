@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-STAG_MWC_OUTPUT_PATH=/home/groups/lu_kpmi/outputs_reformat
+STAG_MWC_OUTPUT_PATH=/home/groups/lu_kpmi/outputs
 
 rm -f table.csv
 rm -rf kreport_files
@@ -9,7 +9,7 @@ mkdir -p kreport_files
 
 echo "sample_name,patient_id,treatment,time" > sample_metadata.csv
 
-for f in $(ls $STAG_MWC_OUTPUT_PATH | grep LV) ; do
+for f in $(ls $STAG_MWC_OUTPUT_PATH | grep LV) ; do # TODO: Enable processing of any sample, not only the ones in old format
     sample_name=$(echo $f | awk -F '_' '{print $1"_"$2"_"$3}')
     patient_id=$(echo $f | awk -F '_' '{print $1}')
     treatment=$(echo $f | awk -F '_' '{print $2}')

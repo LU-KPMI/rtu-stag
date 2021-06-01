@@ -5,12 +5,12 @@ datestamp=$(date -d "today" +"%Y%m%d%H%M")
 mkdir -p $HOME/cron_logs
 LOG_FILE=$HOME/cron_logs/$datestamp
 
-sample_list="" # The pathname of file containing list of samples to be processed. Each line should be in following format: actual_name path_to_read_1 path_to_read_2
+sample_list="list" # The pathname of file containing list of samples to be processed. Each line should be in following format: sample_name path_to_read_1 path_to_read_2
 work_path="" # The pathname of working directory you created
 taxon_db_path="/home/groups/lu_kpmi/databases/full_ref_bafp"
 human_ref_path="/home/groups/lu_kpmi/databases/human_reference"
 resistome_path="/home/groups/lu_kpmi/databases/groot_db/arg-annot_index"
-output_path="/home/groups/lu_kpmi/outputs_reformat"
+output_path="/home/groups/lu_kpmi/outputs"
 
 echo "Contents of file:" >> $LOG_FILE
 cat $sample_list >> $LOG_FILE
