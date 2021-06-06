@@ -2,6 +2,7 @@ import os
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.spatial import distance
 
 
 def bray_curtis(u, v):
@@ -41,36 +42,61 @@ for filename in os.listdir("./bracken_1"):
             first = False
     
 
-abundances_before = []
-abundances_after = []
+sample_abundances = []
 
-with open("patient_richness.csv") as f:
-    first = True
-    for line in f:
-        if not first:
-            data = line.rstrip().split(',')
-            sample_name_before = data[0] + "_" + data[1] + "_" + "T1"
-            sample_name_after = data[0] + "_" + data[1] + "_" + "T2"
+for t in ["STD2", "STD3", "Control"]:
+    with open("patient_richness.csv") as f:
+        first = True
+        for line in f:
+            if not first:
+                data = line.rstrip().split(',')
+                if data[1] != t:
+                    continue
+                sample_name_before = data[0] + "_" + data[1] + "_" + "T1"
+                sample_name_after = data[0] + "_" + data[1] + "_" + "T2"
 
-            before = read_abundance_vector(os.path.join("bracken_1", sample_name_before + ".bracken"))
-            after = read_abundance_vector(os.path.join("bracken_1", sample_name_after + ".bracken"))
+                before = read_abundance_vector(os.path.join("bracken_1", sample_name_before + ".bracken"))
+                after = read_abundance_vector(os.path.join("bracken_1", sample_name_after + ".bracken"))
 
-            abundances_before.append([data[0], before])
-            abundances_after.append([data[0], after])
-        first = False
+                sample_abundances.append([data[0], data[1], before, after])
+            first = False
 
-n = len(abundances_before)
+n = len(sample_abundances)
 
 d_before, d_after = np.zeros(shape=(n, n)), np.zeros(shape=(n, n))
 
 
 for i in range(n):
     for j in range(n):
-        d_before[i][j] = bray_curtis(abundances_before[i][1], abundances_before[j][1])
-        d_after[i][j]  = bray_curtis(abundances_after[i][1], abundances_after[j][1])
+        d_before[i][j] = distance.jensenshannon(sample_abundances[i][2], sample_abundances[j][2])
+        d_after[i][j]  = distance.jensenshannon(sample_abundances[i][3], sample_abundances[j][3])
+
+avg_d_before = {}
+avg_d_after = {}
+
+for i in range(n):
+    for j in range(i):
+        if sample_abundances[i][1] == sample_abundances[j][1]:
+            t = sample_abundances[i][1]
+            if t not in avg_d_before:
+                avg_d_before[t] = 0
+                avg_d_after[t] = 0
+            avg_d_before[t] += d_before[i][j]
+            avg_d_after[t] += d_after[i][j]
+
+for t in avg_d_before:
+    c = 0
+    for s in sample_abundances:
+        if s[1] == t:
+            c += 1
+    avg_d_before[t] /= c * (c - 1) / 2
+    avg_d_after[t] /= c * (c - 1) / 2
 
 
-fig, ax = plt.subplots(2, 1, figsize=(5, 10))
+print('avg_d_before =', avg_d_before)
+print('avg_d_after =', avg_d_after)
+
+fig, ax = plt.subplots(2, 1, figsize=(7, 14))
 
 g1 = sns.heatmap(d_before, linewidth = 0.5, ax=ax[0], square=True)
 g1.set(xlabel = None, ylabel = None)
