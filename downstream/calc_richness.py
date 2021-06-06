@@ -1,9 +1,9 @@
 #!/bin/python3
 
-import os
-import re
-import random
 import math
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def shannon(v):
@@ -24,41 +24,46 @@ def chao1(v):
 
 
 def rarefy(v, f):
-    res = []
+    X = []
+    Y = []
     step = 5
     sizes = [sum(v) * f // 100 for f in range(step, 101, step)]
+    arr = []
+    for i, x in enumerate(v):
+        arr += [i] * x
+    np.random.shuffle(arr)
+
     cur = [0] * len(v)
-    for s in sizes:
-        x = []
-        for i in range(len(v)):
-            x += [i] * (v[i] - cur[i])
-        sample = random.sample(x, s - sum(cur))
-        for t in sample:
-            cur[t] += 1
-        res.append([sum(cur) / sum(v), f(cur)])
-    return res
 
-
-def read_bracken_file(filename):
-    v = []
-    with open(filename) as f:
-        first = True
-        for line in f:
-            if not first:
-                data = line.rstrip().split('\t')
-                n = int(data[5])
-                v.append(n)
-            first = False
-    return v
+    j = 0
+    for i, x in enumerate(arr):
+        cur[x] += 1
+        if i + 1 == sizes[j]:
+            X.append(sum(cur))
+            Y.append(f(cur))
+            j += 1
+    return X, Y
 
 
 print("sample_name", "chao1", "shannon", "observed", sep=",")
 
-for filename in os.listdir("./bracken_1/"):
-    if not filename.endswith(".bracken"):
-        continue
-    sample_name = re.sub(".bracken", "", filename)
+fig, ax = plt.subplots()
+ax.grid()
+ax.ticklabel_format(axis='x', style='plain')
+ax.xaxis.set_tick_params(rotation=90)
+ax.set_xlabel("Read count")
+ax.set_ylabel("Observed species")
 
-    v = read_bracken_file(os.path.join("bracken_1", filename))
-    print(sample_name, chao1(v), shannon(v), observed(v), sep=",")
+table = pd.read_csv("abundances.csv", index_col=0)
+for index, row in table.iterrows():
+    v = list(row)
+    print(index, chao1(v), shannon(v), observed(v), sep=",")
 
+    x, y = rarefy(v, observed)
+    ax.plot(x, y, linewidth=0.12)
+    ax.text(x[-1], y[-1] - 2, index, fontsize=2)
+
+ax.set_xlim(0, None)
+ax.set_ylim(0, None)
+
+plt.savefig("rarefaction.svg", bbox_inches='tight')

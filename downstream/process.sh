@@ -3,7 +3,6 @@ set -euo pipefail
 
 STAG_MWC_OUTPUT_PATH=/home/groups/lu_kpmi/outputs
 
-rm -f table.csv
 rm -rf kreport_files
 mkdir -p kreport_files
 
@@ -37,19 +36,20 @@ echo "Kreports extracted"
 
 BRACKEN_DB_PATH=$GROUP/databases/full_ref_bafp/database150mers.kmer_distrib
 
-rm -rf bracken_1
-rm -rf bracken_10
-mkdir -p bracken_1
-mkdir -p bracken_10
+rm -rf bracken
+mkdir -p bracken
 
 for f in ./kreport_files/* ; do
 	name=$(basename ${f%.kreport})
 	echo $name
-	../../Bracken/src/est_abundance.py -i $f -k $BRACKEN_DB_PATH -o bracken_1/$name.bracken -t 1 -l G --out-report bracken_1/$name.bracken.kreport
-	../../Bracken/src/est_abundance.py -i $f -k $BRACKEN_DB_PATH -o bracken_10/$name.bracken -t 10 -l G --out-report bracken_10/$name.bracken.kreport
+	../../Bracken/src/est_abundance.py -i $f -k $BRACKEN_DB_PATH -o bracken/$name.bracken -t 1 -l G --out-report bracken/$name.bracken.kreport
 done
 
 echo "Bracken finished"
+
+python3 ./gen_table.py > abundances.csv
+
+echo "Abundance table generated"
 
 python3 ./calc_richness.py > richness.csv
 
@@ -59,6 +59,6 @@ Rscript richness_summary.R
 
 echo "Richness summary complete"
 
-python3 ./pairwise.py
-
-echo "Pairwise analysis done"
+#python3 ./pairwise.py
+#
+#echo "Pairwise analysis done"
