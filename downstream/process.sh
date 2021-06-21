@@ -20,7 +20,7 @@ for f in $(ls $STAG_MWC_OUTPUT_PATH | grep LV) ; do # TODO: Enable processing of
 	            cp $s/kraken2/1.kreport kreport_files/$sample_name.kreport
 			elif [ -e $s/kraken2/2.kreport ] ; then
 				cp $s/kraken2/2.kreport kreport_files/$sample_name.kreport
-			elif [ -e $s/kraken/$sample_name.kreport ] ; then
+			elif [ -e $s/kraken2/$sample_name.kreport ] ; then
 				cp $s/kraken2/$sample_name.kreport kreport_files/$sample_name.kreport
 			fi
             break
