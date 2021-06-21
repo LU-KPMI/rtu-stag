@@ -62,3 +62,7 @@ echo "Richness summary visualization complete"
 python3 ./pairwise.py
 
 echo "Pairwise analysis done"
+
+python3 ./enterotypes.py
+
+echo "Basic enterotype analysis done"
