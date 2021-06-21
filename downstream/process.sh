@@ -55,9 +55,9 @@ python3 ./calc_richness.py > richness.csv
 
 echo "Richness calculated"
 
-Rscript richness_summary.R
+python3 ./graphs.py
 
-echo "Richness summary complete"
+echo "Richness summary visualization complete"
 
 #python3 ./pairwise.py
 #
