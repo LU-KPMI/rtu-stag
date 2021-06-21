@@ -1,6 +1,6 @@
-import os
 import numpy as np
 import seaborn as sns
+import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.spatial import distance
 
@@ -10,61 +10,26 @@ def bray_curtis(u, v):
     c = sum(min(x, y) for x, y in zip(u, v))
     return 1 - 2 * c / (sum(u) + sum(v))
 
-genus_to_id = {}
-genus_count = 0
+data = pd.read_csv("./abundances.csv", index_col=0)
+metadata = pd.read_csv("./sample_metadata.csv", index_col=0)
 
-
-def read_abundance_vector(filename):
-    v = [0] * genus_count
-    with open(filename) as f:
-        first = True
-        for line in f:
-            if not first:
-                data = line.rstrip().split('\t')
-                genus = data[0]
-                cnt = float(data[5])
-                v[genus_to_id[genus]] = cnt
-            first = False
-    return v
-
-
-for filename in os.listdir("./bracken_1"):
-    if not filename.endswith(".bracken"):
-        continue
-    with open(os.path.join("bracken_1", filename)) as f:
-        first = True
-        for line in f:
-            if not first:
-                genus = line.rstrip().split('\t')[0]
-                if not genus in genus_to_id:
-                    genus_to_id[genus] = genus_count
-                    genus_count += 1
-            first = False
-    
+keep = set(metadata[metadata["time"] == "T1"]["patient_id"]).intersection(set(metadata[metadata["time"] == "T2"]["patient_id"]))
+metadata = metadata[metadata["patient_id"].isin(keep)]
+data = data[data.index.isin(metadata.index)]
 
 sample_abundances = []
 
-for t in ["STD2", "STD3", "Control"]:
-    with open("patient_richness.csv") as f:
-        first = True
-        for line in f:
-            if not first:
-                data = line.rstrip().split(',')
-                if data[1] != t:
-                    continue
-                sample_name_before = data[0] + "_" + data[1] + "_" + "T1"
-                sample_name_after = data[0] + "_" + data[1] + "_" + "T2"
-
-                before = read_abundance_vector(os.path.join("bracken_1", sample_name_before + ".bracken"))
-                after = read_abundance_vector(os.path.join("bracken_1", sample_name_after + ".bracken"))
-
-                sample_abundances.append([data[0], data[1], before, after])
-            first = False
+for treatment in ["STD2", "STD3", "Control"]:
+    for patient_id in set(metadata[metadata["treatment"] == treatment]["patient_id"]):
+        sample_name_before = patient_id + "_" + treatment + "_" + "T1"
+        sample_name_after = patient_id + "_" + treatment + "_" + "T2"
+        before = np.array(data.loc[sample_name_before])
+        after = np.array(data.loc[sample_name_after])
+        sample_abundances.append([patient_id, treatment, before, after])
 
 n = len(sample_abundances)
 
 d_before, d_after = np.zeros(shape=(n, n)), np.zeros(shape=(n, n))
-
 
 for i in range(n):
     for j in range(n):

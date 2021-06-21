@@ -59,6 +59,6 @@ python3 ./graphs.py
 
 echo "Richness summary visualization complete"
 
-#python3 ./pairwise.py
-#
-#echo "Pairwise analysis done"
+python3 ./pairwise.py
+
+echo "Pairwise analysis done"
