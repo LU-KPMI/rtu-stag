@@ -45,7 +45,15 @@ def rarefy(v, f):
     return X, Y
 
 
-print("sample_name", "chao1", "shannon", "observed", "read_count", sep=",")
+metrics = [
+    (chao1, "chao1"),
+    (shannon, "shannon"),
+    (observed, "observed"),
+    ]
+
+
+
+print("sample_name", *(list(zip(*metrics))[1]), "read_count", sep=",")
 
 fig, ax = plt.subplots()
 ax.grid()
@@ -57,7 +65,8 @@ ax.set_ylabel("Observed species")
 table = pd.read_csv("abundances.csv", index_col=0)
 for index, row in table.iterrows():
     v = list(row)
-    print(index, chao1(v), shannon(v), observed(v), sum(v), sep=",")
+    print(index, *map(lambda f: f(v), list(zip(*metrics))[0]), sum(v), sep=",")
+
 
     x, y = rarefy(v, observed)
     ax.plot(x, y, linewidth=0.12)

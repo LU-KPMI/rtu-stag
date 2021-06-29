@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import math
 
 def add_to_pdf(pdf, title, data):
     plt.scatter(data["read_count"], data["observed"], 1)
@@ -35,9 +36,18 @@ with PdfPages("graphs.pdf") as pdf:
     data_before = data_before[data_before.index.isin(keep)]
     data_after = data_after[data_after.index.isin(keep)]
 
+    metrics = list(data_before.columns)
+    metrics.remove("treatment")
+    metrics.remove("read_count")
 
-    for metric in ["chao1", "shannon", "observed"]:
-        fig, axs = plt.subplots(3, 2)
+    for metric in metrics:
+        fig, axs = plt.subplots(3, 2, figsize=(10, 20))
+
+        max_y = max(max(data_before[metric]), max(data_after[metric]))
+        if max_y < 10:
+            max_y = math.ceil(max_y)
+        else:
+            max_y = math.ceil(max_y / 100) * 100
 
         fig.suptitle(metric)
 
@@ -49,7 +59,7 @@ with PdfPages("graphs.pdf") as pdf:
             axs[i][1].violinplot(data_after[data_after["treatment"] == treatment][metric])
 
             for ax in axs[i]:
-                ax.set_ylim(0, 5 if metric == "shannon" else 1500)
+                ax.set_ylim(0, max_y)
             axs[i][0].set_ylabel(treatment)
 
         pdf.savefig(fig)
