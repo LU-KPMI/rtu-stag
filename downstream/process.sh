@@ -55,6 +55,10 @@ python3 ./calc_richness.py > richness.csv
 
 echo "Richness calculated"
 
+python3 ./rarefaction.py
+
+echo "Rarefaction generated"
+
 python3 ./graphs.py
 
 echo "Richness summary visualization complete"
