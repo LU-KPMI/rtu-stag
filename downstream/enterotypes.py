@@ -41,6 +41,7 @@ def get_relative_abundances(data, category_names):
     return np.array(d)
 
 data = pd.read_csv("./abundances.csv", index_col=0)
+data.sort_index(inplace=True, ascending=False)
 category_names = get_significant_categories(data)
 d = get_relative_abundances(data, category_names)
 d_cum = d.cumsum(axis=1)
