@@ -4,23 +4,7 @@ import math
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-def shannon(v):
-    s = sum(v)
-    return sum(-(x/s) * math.log(x/s) if x > 0 else 0 for x in v)
-
-
-def observed(v):
-    return sum(1 if x > 0 else 0 for x in v)
-
-
-def chao1(v):
-    obs = observed(v)
-    n1 = sum(1 if x == 1 else 0 for x in v)
-    n2 = sum(1 if x == 2 else 0 for x in v)
-
-    return obs + n1 * (n1 - 1) / (2 * (n2 + 1))
+from skbio.diversity import alpha
 
 
 def rarefy(v, f):
@@ -46,9 +30,33 @@ def rarefy(v, f):
 
 
 metrics = [
-    (chao1, "chao1"),
-    (shannon, "shannon"),
-    (observed, "observed"),
+    (alpha.chao1, "chao1"),
+    (alpha.shannon, "shannon"),
+    (alpha.observed_otus, "observed"),
+    (alpha.ace, "ace"),
+    (alpha.berger_parker_d, "berger-parker"),
+    (alpha.brillouin_d, "brillouin"),
+    (alpha.dominance, "dominance"),
+    (alpha.doubles, "doubles"),
+    (alpha.enspie, "enspie"),
+#    (alpha.esty_ci, "esty_ci"), # Disabled because of runtime error
+    (alpha.fisher_alpha, "fisher alpha"),
+    (alpha.gini_index, "gini"),
+    (alpha.goods_coverage, "goods coverage"),
+    (alpha.heip_e, "heip evenness"),
+#    (alpha.kempton_taylor_q, "kempton_taylor_q"), # Disabled because of runtime error
+#    (alpha.lladser_pe, "lladser"), # Disabled because of runtime error
+    (alpha.margalef, "margalef"),
+    (alpha.mcintosh_d, "mcintosh_d"),
+    (alpha.mcintosh_e, "mcintosh_e"),
+    (alpha.menhinick, "menhinick"),
+#    (alpha.michaelis_menten_fit, "michaelis_menten_fit"), # Disabled because of runtime error
+    (alpha.pielou_e, "pielou_e"),
+    (alpha.robbins, "robbins"),
+    (alpha.simpson, "simpson"),
+    (alpha.simpson_e, "simpson_e"),
+    (alpha.singles, "singles"),
+    (alpha.strong, "strong"),
     ]
 
 
@@ -68,7 +76,7 @@ for index, row in table.iterrows():
     print(index, *map(lambda f: f(v), list(zip(*metrics))[0]), sum(v), sep=",")
 
 
-    x, y = rarefy(v, observed)
+    x, y = rarefy(v, alpha.observed_otus)
     ax.plot(x, y, linewidth=0.12)
     ax.text(x[-1], y[-1] - 2, index, fontsize=2)
 
