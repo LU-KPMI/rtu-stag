@@ -35,7 +35,7 @@ def get_relative_abundances(data, category_names):
         v = [row[name] for name in category_names]
         v.append(sum(np.array(row)) - sum(v))
         v = np.array(v)
-        v = v / sum(np.array(row))
+        v = v / sum(v)
 
         d.append(v)
     return np.array(d)

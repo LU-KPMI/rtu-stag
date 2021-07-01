@@ -1,5 +1,3 @@
-#!/bin/python3
-
 import math
 import pandas as pd
 import numpy as np

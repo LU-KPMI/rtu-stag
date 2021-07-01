@@ -47,7 +47,7 @@ done
 
 echo "Bracken finished"
 
-python3 ./gen_table.py > abundances.csv
+python3 ./generate_abundance_table.py > abundances.csv
 
 echo "Abundance table generated"
 

@@ -25,8 +25,6 @@ if __name__ == "__main__":
 
     for sample in sample_to_abundance:
         abundance = sample_to_abundance[sample]
-        v = [0] * len(all_genuses)
-        for i, g in enumerate(all_genuses):
-            v[i] = abundance[g] if g in abundance else 0
+        v = [abundance[g] if g in abundance else 0 for g in all_genuses]
         print(sample, *v, sep=",")
 
