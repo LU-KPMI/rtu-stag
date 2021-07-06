@@ -14,27 +14,23 @@ def add_to_pdf(pdf, title, data):
     plt.close()
 
 data = pd.read_csv("./richness.csv", index_col="sample_name")
-metadata = pd.read_csv("./sample_metadata.csv", index_col="sample_name")
-
-data = data.merge(metadata, left_index=True, right_index=True)
+metadata = pd.read_csv("./metadata.csv", index_col="patient_id")
 
 with PdfPages("graphs.pdf") as pdf:
     add_to_pdf(pdf, "Visi", data)
 
     for treatment in ["Control", "STD2", "STD3"]:
-        for time in ["T1", "T2"]:
-            add_to_pdf(pdf, str(treatment) + " & " + str(time), data[(data["treatment"] == treatment) & (data["time"] == time)])
+        for time, row_name in [("T1", "sample_id_before"), ("T2", "sample_id_after")]:
+            sample_ids = set(metadata[metadata["treatment"] == treatment][row_name].dropna())
+            add_to_pdf(pdf, str(treatment) + " & " + str(time), data[data.index.isin(sample_ids)])
 
-    data_before = data[data["time"] == "T1"].set_index("patient_id").drop("time", 'columns')
-    data_after = data[data["time"] == "T2"].set_index("patient_id").drop("time", 'columns')
-
-    keep = data_before.index.intersection(data_after.index)
-
-    print("Patients missing data after therapy:", list(data_before[~data_before.index.isin(keep)].index))
-    print("Patients missing data before therapy:", list(data_after[~data_after.index.isin(keep)].index))
-
-    data_before = data_before[data_before.index.isin(keep)]
-    data_after = data_after[data_after.index.isin(keep)]
+    metadata.dropna(inplace=True)
+    data_before = metadata.\
+                    merge(data, left_on = "sample_id_before", right_index = True).\
+                    drop(["sample_id_before", "sample_id_after"], "columns")
+    data_after  = metadata.\
+                    merge(data, left_on = "sample_id_after", right_index = True).\
+                    drop(["sample_id_before", "sample_id_after"], "columns")
 
     metrics = list(data_before.columns)
     metrics.remove("treatment")
@@ -63,3 +59,4 @@ with PdfPages("graphs.pdf") as pdf:
             axs[i][0].set_ylabel(treatment)
 
         pdf.savefig(fig)
+        plt.close(fig)

@@ -3,10 +3,8 @@ import os
 if __name__ == "__main__":
     sample_to_abundance = {}
     all_genuses = set([])
-    for filename in os.listdir("bracken"):
-        if not filename.endswith(".bracken"):
-            continue
-        with open(os.path.join("bracken", filename)) as f:
+    for filename in os.listdir("bracken_output"):
+        with open(os.path.join("bracken_output", filename)) as f:
             abundance = {}
             first = True
             for line in f:

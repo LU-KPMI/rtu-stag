@@ -12,16 +12,16 @@ def bray_curtis(u, v):
     return 1 - 2 * c / (sum(u) + sum(v))
 
 data = pd.read_csv("./abundances.csv", index_col=0)
-metadata = pd.read_csv("./sample_metadata.csv", index_col=0)
+metadata = pd.read_csv("./metadata.csv", index_col="patient_id")
+metadata.dropna(inplace = True)
 
-keep = set(metadata[metadata["time"] == "T1"]["patient_id"]).intersection(set(metadata[metadata["time"] == "T2"]["patient_id"]))
-metadata = metadata[metadata["patient_id"].isin(keep)]
-data = data[data.index.isin(metadata.index)]
+keep = set(metadata["sample_id_before"]).union(set(metadata["sample_id_after"]))
+data = data[data.index.isin(keep)]
 
 sample_abundances = []
 
 for treatment in ["STD2", "STD3", "Control"]:
-    for patient_id in set(metadata[metadata["treatment"] == treatment]["patient_id"]):
+    for patient_id in metadata[metadata["treatment"] == treatment].index:
         sample_name_before = patient_id + "_" + treatment + "_" + "T1"
         sample_name_after = patient_id + "_" + treatment + "_" + "T2"
         before = np.array(data.loc[sample_name_before])
