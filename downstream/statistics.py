@@ -1,3 +1,4 @@
+import itertools
 import math
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,9 +6,36 @@ import seaborn as sns
 from matplotlib.backends.backend_pdf import PdfPages
 
 
+def subsetting(data):
+    numerical_before = ["shannon_before", "observed_before", "read_count_before"]
+    categorical_before = ["enterotype_before", "treatment"]
+    numerical_after = ["shannon_after", "observed_after", "read_count_after"]
+    categorical_after = ["enterotype_after"]
+
+    categories = [sorted(data[c].dropna().unique()) for c in categorical_before]
+    with PdfPages("output/subsetting.pdf") as pdf:
+        for target in numerical_after + categorical_after:
+            fig, axs = plt.subplots(10, 10, figsize=(50, 50))
+            fig.suptitle(target, size=60)
+            axs = [x for ax in axs for x in ax]
+            i = 0
+            for vals in itertools.product(*categories):
+                df = data
+                for c, v in zip(categorical_before, vals):
+                    df = df[df[c] == v]
+                for n in numerical_before:
+                    df2 = df[[n, target]].dropna()
+                    axs[i].scatter(x=df2[n], y=df2[target])
+                    axs[i].set_title(" + ".join(vals) + " : " + n)
+                    i += 1
+            pdf.savefig(fig)
+            plt.close(fig)
+
 
 if __name__ == "__main__":
     data = pd.read_csv("patients.csv", index_col="patient_id")
+
+    subsetting(data)
 
     g = sns.pairplot(data, diag_kind="kde", palette=["#F4F1DE","#AA3F22"])
     g.map_lower(sns.kdeplot, levels=4, color=".4")
