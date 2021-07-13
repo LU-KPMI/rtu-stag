@@ -3,6 +3,7 @@
 #       * There should already be a file containing patient_id, sample_id_before, sample_id_after
 #         and various metadata instead of hacking it together from sample ids.
 import os
+import shutil
 import subprocess
 
 
@@ -45,6 +46,18 @@ def get_kraken_filename(sample_id):
     return None
 
 
+def get_amrplusplus_filename(sample_id):
+    sample_subdir = os.path.join(group_outputs_dir, sample_id)
+    for trial in os.listdir(sample_subdir):
+        amrplusplus_dir = os.path.join(sample_subdir, trial, "amrplusplus", "RunResistome")
+        if os.path.isdir(amrplusplus_dir):
+            for f in os.listdir(amrplusplus_dir):
+                if f.endswith(".mechanism.tsv"):
+                    return os.path.join(amrplusplus_dir, f)
+            raise AssertionError("Can't find .mechanism.tsv file im amrplusplus subdirectory")
+    return None
+
+
 def run_bracken(kraken_filename, output_filename, level):
     proc = subprocess.run(["../../Bracken/src/est_abundance.py",
         "-i", kraken_filename,
@@ -66,10 +79,21 @@ def create_bracken_reports():
             print(sample_id, " missing kraken2, skipping sample")
             continue
 
-        out_name =  os.path.join("bracken_output", str(sample_id) + ".bracken")
+        out_name = os.path.join("bracken_output", str(sample_id) + ".bracken")
         run_bracken(kraken_filename, out_name, "G")
+
+
+def extract_amrplusplus_reports():
+    os.mkdir("amrplusplus_report")
+    for sample_id in get_all_sample_ids():
+        amrplusplus_filename = get_amrplusplus_filename(sample_id)
+        if amrplusplus_filename == None:
+            print(sample_id, " missing amrplusplus, skipping sample")
+            continue
+        shutil.copyfile(amrplusplus_filename, os.path.join("amrplusplus_report", str(sample_id) + ".tsv"))
 
 
 if __name__ == "__main__":
     print_metadata("metadata.csv")
     create_bracken_reports()
+    extract_amrplusplus_reports()
