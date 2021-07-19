@@ -43,11 +43,32 @@ class Sample:
         self.abundance = parse_bracken(os.path.join("bracken_output", id + ".bracken"))
         self.resistome = parse_amrplusplus(os.path.join("amrplusplus_report", id + ".tsv"))
 
-    def read_count(self):
-        return sum(self.abundance.values())
-    
-    def read_count_resistome(self):
-        return sum(self.resistome.values())
+    def vectorize(self, keys, attr):
+        m = getattr(self, attr)
+        return [m[x] if x in m else 0 for x in keys]
+
+    def calc_enterotype(self, significant_otus):
+        if self.abundance == None:
+            return None
+        total = sum(self.abundance.values())
+        max_otu = None
+        for otu in significant_otus:
+            if otu in self.abundance:
+                if max_otu == None or self.abundance[otu] > self.abundance[max_otu]:
+                    max_otu = otu
+        if self.abundance[max_otu] > total / 5:
+            if max_otu == "Bacteroides":
+                return "A"
+            elif max_otu == "Prevotella":
+                return "B"
+            else:
+                return "C"
+        return "D"
+
+    def apply_diversity_metric(self, metric):
+        if self.abundance == None:
+            return None
+        return metric(list(self.abundance.values()))
 
 
 class Patient:
@@ -58,29 +79,12 @@ class Patient:
         self.treatment = treatment
 
 
-def get_patients_from_table(filename):
+def read_patients_from_csv(filename):
     patients = []
     table = pd.read_csv(filename, index_col = "patient_id")
     for index, row in table.iterrows():
         patients.append(Patient(index, row["sample_id_before"], row["sample_id_after"], row["treatment"]))
     return patients
-
-
-def get_all_otus(samples):
-    all_otus = set()
-    for sample in samples:
-        for otu in sample.abundance:
-            all_otus.add(otu)
-    return sorted(all_otus)
-
-
-def get_all_mechanisms(samples):
-    all_mechanisms = set()
-    for sample in samples:
-        if sample.resistome != None:
-            for otu in sample.resistome:
-                all_mechanisms.add(otu)
-    return sorted(all_mechanisms)
 
 
 def get_all_samples(patients):
@@ -93,48 +97,50 @@ def get_all_samples(patients):
     return samples
 
 
-def vectorize_abundance(sample, otus):
-    return [sample.abundance[otu] if otu in sample.abundance else 0 for otu in otus]
+def get_all_sample_keys(samples, attr):
+    all_keys = set()
+    for sample in samples:
+        if getattr(sample, attr) != None:
+            for k in getattr(sample, attr):
+                all_keys.add(k)
+    return sorted(all_keys)
 
 
-def vectorize_resistome(sample, mechanisms):
-    return [sample.resistome[mechanism] if mechanism in sample.resistome else 0 for mechanism in mechanisms]
+def print_attr_table(samples, output_file, attr):
+    keys = get_all_sample_keys(samples, attr)
+    with open(output_file, "w") as f:
+        print("sample_id", *keys, sep = ",", file = f)
+        for sample in samples:
+            if getattr(sample, attr) != None:
+                print(sample.id, *sample.vectorize(keys, attr), sep = ",", file = f)
 
 
 def print_abundance_table(samples, output_file):
-    all_otus = get_all_otus(samples)
-    with open(output_file, "w") as f:
-        print("sample_id", *all_otus, sep = ",", file = f)
-        for sample in samples:
-            print(sample.id, *vectorize_abundance(sample, all_otus), sep = ",", file = f)
+    print_attr_table(samples, output_file, "abundance")
 
 
 def print_resistome_table(samples, output_file):
-    all_mechanisms = get_all_mechanisms(samples)
-    with open(output_file, "w") as f:
-        print("sample_id", *all_mechanisms, sep = ",", file = f)
-        for sample in samples:
-            if sample.resistome != None:
-                print(sample.id, *vectorize_resistome(sample, all_mechanisms), sep = ",", file = f)
+    print_attr_table(samples, output_file, "resistome")
 
 
-def get_significant_otus(samples):
+def get_significant_keys(samples, attr, offset):
     significant = []
 
     for sample in samples:
-        total_reads = sample.read_count()
+        m = getattr(sample, attr)
+        if m == None:
+            continue
+        total_reads = sum(m.values())
 
         while True:
-            s = 0
-            for i in significant:
-                s += sample.abundance[i] if i in sample.abundance else 0
-            if s > 0.3 * total_reads:
+            s = sum(sample.vectorize(significant, attr))
+            if s > offset * total_reads:
                 break
             i_take = None
-            for i in sample.abundance:
+            for i in m:
                 if i in significant:
                     continue
-                if i_take == None or sample.abundance[i] > sample.abundance[i_take]:
+                if i_take == None or m[i] > m[i_take]:
                     i_take = i
             significant.append(i_take)
 
@@ -142,49 +148,23 @@ def get_significant_otus(samples):
     return significant
 
 
-def get_significant_mechanisms(samples):
-    significant = []
-
-    for sample in samples:
-        if sample.resistome == None:
-            continue
-        total_reads = sample.read_count_resistome()
-
-        while True:
-            s = 0
-            for i in significant:
-                s += sample.resistome[i] if i in sample.resistome else 0
-            if s > 0.7 * total_reads:
-                break
-            i_take = None
-            for i in sample.resistome:
-                if i in significant:
-                    continue
-                if i_take == None or sample.resistome[i] > sample.resistome[i_take]:
-                    i_take = i
-            significant.append(i_take)
-
-    return significant
+def get_significant_otus(samples):
+    return get_significant_keys(samples, "abundance", 0.3)
 
 
-def calc_enterotype(sample, significant_otus):
-    total = sample.read_count()
-    max_otu = None
-    for otu in significant_otus:
-        if otu in sample.abundance:
-            if max_otu == None or sample.abundance[otu] > sample.abundance[max_otu]:
-                max_otu = otu
-    if sample.abundance[max_otu] > total / 5:
-        if max_otu == "Bacteroides":
-            return "A"
-        elif max_otu == "Prevotella":
-            return "B"
-        else:
-            return "C"
-    return "D"
+def get_significant_resistance_mechanisms(samples):
+    return get_significant_keys(samples, "resistome", 0.7)
 
 
-def get_patient_table(patients): # TODO: pretify
+def get_patient_table(patients):
+    def skip_if_none(f, x):
+        return f(x) if x != None else None
+    def get_metric_applier(metric):
+        return lambda sample: sample.apply_diversity_metric(metric)
+    def append_both(name, func):
+        columns.append((name + "_before", lambda patient: skip_if_none(func, patient.sample_before)))
+        columns.append((name + "_after", lambda patient: skip_if_none(func, patient.sample_after)))
+
     metrics = [
         (alpha.chao1, "chao1"),
         (alpha.shannon, "shannon"),
@@ -195,99 +175,56 @@ def get_patient_table(patients): # TODO: pretify
 
     significant_otus = get_significant_otus(get_all_samples(patients))
 
-    column_names = []
-    for _, metric in metrics:
-        column_names.append(metric + "_before")
-        column_names.append(metric + "_after")
-    column_names.append("enterotype_before")
-    column_names.append("enterotype_after")
-    column_names.append("read_count_before")
-    column_names.append("read_count_after")
-    column_names.append("treatment")
+    columns = []
+
+    for metric, metric_name in metrics:
+        append_both(metric_name, get_metric_applier(metric))
+    append_both("enterotype", lambda sample: sample.calc_enterotype(significant_otus))
+    append_both("read_count", lambda sample: sum(sample.abundance.values()))
+    columns.append(("treatment", lambda patient: patient.treatment))
 
     all_data = []
 
     for patient in patients:
         print(patient.id)
-        values = []
-        for metric, _ in metrics:
-            values.append(metric(list(patient.sample_before.abundance.values())) if patient.sample_before != None else None)
-            values.append(metric(list(patient.sample_after.abundance.values())) if patient.sample_after != None else None)
-        values.append(calc_enterotype(patient.sample_before, significant_otus) if patient.sample_before != None else None)
-        values.append(calc_enterotype(patient.sample_after, significant_otus) if patient.sample_after != None else None)
-        values.append(patient.sample_before.read_count() if patient.sample_before != None else None)
-        values.append(patient.sample_after.read_count() if patient.sample_after != None else None)
-        values.append(patient.treatment)
-        all_data.append(values)
+        all_data.append([f(patient) for _, f in columns])
 
-    df = pd.DataFrame(columns=column_names, index=[p.id for p in patients], data = all_data)
+    df = pd.DataFrame(columns=[name for name, _ in columns], index=[p.id for p in patients], data = all_data)
     df.index.name = "patient_id"
     return df
 
 
-def get_relative_abundances(samples, category_names):
+def get_relative_abundances(samples, category_names, attr):
     d = []
     for sample in samples:
-        v = vectorize_abundance(sample, category_names)
-        v.append(sample.read_count() - sum(v))
-        v = np.array(v)
-        v = v / sum(v)
-        d.append(v)
-    return np.array(d)
-
-
-def draw_enterotypes(samples, filename):
-    category_names = get_significant_otus(samples)
-    d = get_relative_abundances(samples, category_names)
-    d_cum = d.cumsum(axis=1)
-
-    category_names.append("Other")
-    labels = [s.id for s in samples]
-    category_colors = plt.get_cmap('tab20')(np.linspace(0.05, 0.95, len(category_names)))
-
-    fig, ax = plt.subplots(figsize=(70, 100))
-    for i, (name, color) in enumerate(zip(category_names, category_colors)):
-        widths = d[:, i]
-        starts = d_cum[:, i] - widths
-        rects = ax.barh(labels, widths, left=starts, height=0.5, label=name, color=color)
-        r, g, b, _ = color
-        text_color = 'white' if r * g * b < 0.5 else 'darkgrey'
-#       ax.bar_label(rects, label_type='center', color=text_color)
-    ax.legend(ncol=len(category_names), bbox_to_anchor=(0, 1), loc='lower left', fontsize='small')
-
-    plt.savefig(filename)
-    plt.close(fig)
-
-
-def get_relative_abundances2(samples, category_names):
-    d = []
-    for sample in samples:
-        if sample == None or sample.resistome == None:
+        if sample == None or getattr(sample, attr) == None:
             v = [0] * (len(category_names) + 1)
         else:
-            v = vectorize_resistome(sample, category_names)
-            v.append(sample.read_count_resistome() - sum(v))
+            m = getattr(sample, attr)
+            v = sample.vectorize(category_names, attr)
+            v.append(sum(m.values()) - sum(v))
             v = np.array(v)
             v = v / sum(v)
         d.append(v)
     return np.array(d)
 
 
-def draw_chart(d, labels, category_names, category_colors, ax):
-    d_cum = d.cumsum(axis=1)
-    for i, (name, color) in enumerate(zip(category_names, category_colors)):
-        widths = d[:, i]
-        starts = d_cum[:, i] - widths
-        ax.barh(labels, widths, left=starts, height=0.5, label=name, color=color)
-
-
-def draw_resistomes(patients, filename):
+def draw_evenness(patients, suptitle, significant_categories_getter, attr, filename):
     fig, axs = plt.subplots(2, 3, figsize=(60, 30))
-    fig.suptitle("Resistome mechanisms", fontsize=40)
+    fig.suptitle(suptitle, fontsize=40)
     axs = axs.transpose()
 
-    significant_mechanisms = get_significant_mechanisms(get_all_samples(patients))
-    category_names = significant_mechanisms + ["Other"]
+    significant_categories = significant_categories_getter(get_all_samples(patients))
+    category_names = significant_categories + ["Other"]
+    category_colors = plt.get_cmap('tab20')(np.linspace(0.05, 0.95, len(category_names)))
+
+    def draw_chart(d, labels, ax):
+        d_cum = d.cumsum(axis=1)
+        for i, (name, color) in enumerate(zip(category_names, category_colors)):
+            widths = d[:, i]
+            starts = d_cum[:, i] - widths
+            ax.barh(labels, widths, left=starts, height=0.5, label=name, color=color)
+
     axs[0][0].set_ylabel("Before", fontsize=40)
     axs[0][1].set_ylabel("After", fontsize=40)
 
@@ -295,19 +232,14 @@ def draw_resistomes(patients, filename):
         subdata = [p for p in patients if p.treatment == treatment]
 
         labels = [p.id for p in subdata]
-        category_colors = plt.get_cmap('tab20')(np.linspace(0.05, 0.95, len(category_names)))
 
         ax_col[0].set_title(treatment, fontsize=40)
 
-        draw_chart(get_relative_abundances2([p.sample_before for p in subdata], significant_mechanisms),
+        draw_chart(get_relative_abundances([p.sample_before for p in subdata], significant_categories, attr),
                 labels,
-                category_names,
-                category_colors,
                 ax_col[0])
-        draw_chart(get_relative_abundances2([p.sample_after for p in subdata], significant_mechanisms),
+        draw_chart(get_relative_abundances([p.sample_after for p in subdata], significant_categories, attr),
                 labels,
-                category_names,
-                category_colors,
                 ax_col[1])
 
     axs[0][0].legend(ncol=len(category_names), bbox_to_anchor=(0, 1.2), loc='lower left', fontsize='small')
@@ -316,51 +248,44 @@ def draw_resistomes(patients, filename):
     plt.close(fig)
 
 
-def print_helicobacter_abundance(patients):
+def draw_enterotypes(patients, filename):
+    draw_evenness(patients, "Relative abundance", get_significant_otus, "abundance", filename)
+
+
+def draw_resistomes(patients, filename):
+    draw_evenness(patients, "Resistome mechanisms", get_significant_resistance_mechanisms, "resistome", filename)
+
+
+def draw_helicobacter_abundance(patients, filename):
     fig, axs = plt.subplots(3, figsize=(8, 24))
     for treatment, ax in zip(["Control", "STD2", "STD3"], axs):
         X = []
         Y = []
-        print("Treatment:", treatment)
         data = [p for p in patients if p.treatment == treatment]
         for p in data:
             if p.sample_before != None and p.sample_after != None:
                 x = p.sample_before.abundance["Helicobacter"] if "Helicobacter" in p.sample_before.abundance else 0
-                x /= p.sample_before.read_count()
+                x /= sum(p.sample_before.abundance.values())
                 X.append(x)
                 y = p.sample_after.abundance["Helicobacter"] if "Helicobacter" in p.sample_after.abundance else 0
-                y /= p.sample_after.read_count()
+                y /= sum(p.sample_after.abundance.values())
                 Y.append(y)
-
-
-            if p.sample_before != None:
-                x = p.sample_before.abundance["Helicobacter"] if "Helicobacter" in p.sample_before.abundance else 0
-                x /= p.sample_before.read_count()
-                x = "{:.2e}".format(x)
-            else:
-                x = "N/A"
-
-            if p.sample_after != None:
-                y = p.sample_after.abundance["Helicobacter"] if "Helicobacter" in p.sample_after.abundance else 0
-                y /= p.sample_after.read_count()
-                y = "{:.2e}".format(y)
-            else:
-                y = "N/A"
-            print(x, y)
         ax.scatter(X, Y)
         ax.set_title(treatment)
         ax.set_xlabel("abundance before")
         ax.set_ylabel("abundance after")
         ax.set_xlim([0, 0.0005])
         ax.set_ylim([0, 0.0005])
-    plt.savefig("helicobacter.svg")
+    plt.savefig(filename)
+
 
 if __name__ == "__main__":
-    patients = get_patients_from_table("metadata.csv")
-#    print_abundance_table(get_all_samples(patients), "abundances.csv")
-#    print_resistome_table(get_all_samples(patients), "resistomes.csv")
-#    get_patient_table(patients).to_csv("patients.csv")
-#    draw_enterotypes(get_all_samples(patients), "sample_enterotypes.svg")
-#    draw_resistomes(patients, "sample_resistomes.svg")
-    print_helicobacter_abundance(patients)
+    patients = read_patients_from_csv("metadata.csv")
+
+    print_abundance_table(get_all_samples(patients), "abundances.csv")
+    print_resistome_table(get_all_samples(patients), "resistomes.csv")
+    get_patient_table(patients).to_csv("patients.csv")
+    draw_enterotypes(patients, "enterotypes.svg")
+    draw_resistomes(patients, "resistomes.svg")
+    draw_helicobacter_abundance(patients, "helicobacter.svg")
 
