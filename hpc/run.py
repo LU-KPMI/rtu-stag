@@ -3,7 +3,8 @@
 import os
 import re
 import sys
-import argparse, textwrap
+import argparse
+import textwrap
 import subprocess
 
 group_dir = "/home/groups/lu_kpmi"
@@ -113,44 +114,45 @@ def stats_mode(args):
     print_stats()
 
 
+def run_qsub(sample_name, enable_kraken, enable_groot, enable_amrplusplus):
+    read_1 = ''
+    read_2 = ''
+    for s in list_all_samples():
+        if s[0] == sample_name:
+            read_1 = s[1]
+            read_2 = s[2]
+            break
+
+    assert(read_1 != '' and read_2 != '')
+
+    qsub_params = '{name} {read_1} {read_2} {work_path} {taxon_db_path} \
+{human_ref_path} {resistome_path} {output_path} {enable_qc_reads} {enable_host_removal} \
+{enable_kraken2} {enable_groot} {enable_amrplusplus} {bracken_threshold}'.format(
+                    name=sample_name,
+                    read_1=read_1,
+                    read_2=read_2,
+                    work_path=os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..')),
+                    taxon_db_path="/home/groups/lu_kpmi/databases/full_ref_bafp",
+                    human_ref_path="/home/groups/lu_kpmi/databases/human_reference",
+                    resistome_path="/home/groups/lu_kpmi/databases/groot_db/arg-annot_index",
+                    output_path="/home/groups/lu_kpmi/outputs",
+                    enable_qc_reads=True,
+                    enable_host_removal=True,
+                    enable_kraken2=enable_kraken,
+                    enable_groot=enable_groot,
+                    enable_amrplusplus=enable_amrplusplus,
+                    bracken_threshold=1)
+
+    command = subprocess.run(['qsub', 'subscripts/sub.run.sh', '-F', qsub_params])
+    return command.returncode == 0
+
+
 def run_mode(args):
-    all_samples = list_all_samples()
     unprocessed = []
 
     with open(args.filename) as file:
         for sample_name in file:
-            sample_name = sample_name.rstrip()
-            read_1 = ''
-            read_2 = ''
-            for s in all_samples:
-                if s[0] == sample_name:
-                    read_1 = s[1]
-                    read_2 = s[2]
-                    break
-
-            assert(read_1 != '' and read_2 != '')
-
-            qsub_params = '{name} {read_1} {read_2} {work_path} {taxon_db_path} \
-{human_ref_path} {resistome_path} {output_path} {enable_qc_reads} {enable_host_removal} \
-{enable_kraken2} {enable_groot} {enable_amrplusplus} {bracken_threshold}'.format(
-                            name=sample_name,
-                            read_1=read_1,
-                            read_2=read_2,
-                            work_path=os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', '..')),
-                            taxon_db_path="/home/groups/lu_kpmi/databases/full_ref_bafp",
-                            human_ref_path="/home/groups/lu_kpmi/databases/human_reference",
-                            resistome_path="/home/groups/lu_kpmi/databases/groot_db/arg-annot_index",
-                            output_path="/home/groups/lu_kpmi/outputs",
-                            enable_qc_reads=True,
-                            enable_host_removal=True,
-                            enable_kraken2=args.kraken,
-                            enable_groot=args.groot,
-                            enable_amrplusplus=str(args.amrplusplus),
-                            bracken_threshold=10)
-
-            command = subprocess.run(['qsub', 'subscripts/sub.run.sh', '-F', qsub_params])
-
-            if command.returncode == 0:
+            if run_qsub(sample_name.rstrip(), args.kraken, args.groot, args.amrplusplus):
                 print(sample_name, "in queue")
             else:
                 print(sample_name, "couldn't run")
@@ -158,6 +160,21 @@ def run_mode(args):
 
     with open(args.filename, 'w') as file:
         file.write('\n'.join(unprocessed))
+
+
+def fzf_select(items):
+    proc = subprocess.run(['fzf', '-m'], input='\n'.join(items), encoding='ascii', stdout=subprocess.PIPE)
+    return proc.stdout.splitlines(False)
+
+
+def interactive_mode(args):
+    selected_samples = fzf_select([item[0] for item in list_all_samples()])
+    enabled_methods = fzf_select(["kraken", "amrplusplus", "groot"])
+    enable_kraken = "kraken" in enabled_methods
+    enable_groot = "groot" in enabled_methods
+    enable_amrplusplus = "amrplusplus" in enabled_methods
+    for sample in selected_samples:
+        run_qsub(sample, enable_kraken, enable_groot, enable_amrplusplus)
 
 
 if __name__ == "__main__":
@@ -178,7 +195,7 @@ if __name__ == "__main__":
 
                 ./run.py diagnostics
             '''))
-    parser.set_defaults(func=lambda x : exit(0))
+    parser.set_defaults(func=interactive_mode)
     subparsers = parser.add_subparsers()
 
     parser_list = subparsers.add_parser('list')
@@ -205,4 +222,3 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     args.func(args)
-
