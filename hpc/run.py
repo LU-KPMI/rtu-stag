@@ -6,6 +6,7 @@ import sys
 import argparse
 import textwrap
 import subprocess
+import datetime
 
 group_dir = "/home/groups/lu_kpmi"
 
@@ -143,7 +144,12 @@ def run_qsub(sample_name, enable_kraken, enable_groot, enable_amrplusplus):
                     enable_amrplusplus=enable_amrplusplus,
                     bracken_threshold=1)
 
-    command = subprocess.run(['qsub', 'subscripts/sub.run.sh', '-F', qsub_params])
+    command = subprocess.run(['qsub',
+                              'subscripts/sub.run.sh',
+                              '-F',
+                              qsub_params,
+                              '-N',
+                              sample_name])
     return command.returncode == 0
 
 
