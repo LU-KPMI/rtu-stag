@@ -67,32 +67,28 @@ def run_bracken(kraken_filename, output_filename, level):
 
 
 def create_bracken_reports():
-    if os.path.exists("bracken_output"):
-        shutil.rmtree("bracken_output")
-    os.mkdir("bracken_output")
+    os.mkdir("outputs/bracken_output")
     for sample_id in get_all_sample_ids():
         kraken_filename = get_kraken_filename(sample_id)
         if kraken_filename == None:
             print(sample_id, " missing kraken2, skipping sample")
             continue
 
-        out_name = os.path.join("bracken_output", str(sample_id) + ".bracken")
+        out_name = os.path.join("outputs", "bracken_output", str(sample_id) + ".bracken")
         run_bracken(kraken_filename, out_name, "G")
 
 
 def extract_amrplusplus_reports():
-    if os.path.exists("amrplusplus_report"):
-        shutil.rmtree("amrplusplus_report")
-    os.mkdir("amrplusplus_report")
+    os.mkdir("outputs/amrplusplus_report")
     for sample_id in get_all_sample_ids():
         amrplusplus_filename = get_amrplusplus_filename(sample_id)
         if amrplusplus_filename == None:
             print(sample_id, " missing amrplusplus, skipping sample")
             continue
-        shutil.copyfile(amrplusplus_filename, os.path.join("amrplusplus_report", str(sample_id) + ".tsv"))
+        shutil.copyfile(amrplusplus_filename, os.path.join("outputs", "amrplusplus_report", str(sample_id) + ".tsv"))
 
 
 if __name__ == "__main__":
-    print_metadata("metadata.csv")
+    print_metadata("outputs/metadata.csv")
     create_bracken_reports()
     extract_amrplusplus_reports()

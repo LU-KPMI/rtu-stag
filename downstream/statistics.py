@@ -13,7 +13,7 @@ def subsetting(data):
     categorical_after = ["enterotype_after"]
 
     categories = [sorted(data[c].dropna().unique()) for c in categorical_before]
-    with PdfPages("output/subsetting.pdf") as pdf:
+    with PdfPages("outputs/pictures/subsetting.pdf") as pdf:
         for target in numerical_after + categorical_after:
             fig, axs = plt.subplots(10, 10, figsize=(50, 50))
             fig.suptitle(target, size=60)
@@ -32,34 +32,29 @@ def subsetting(data):
             plt.close(fig)
 
 
-if __name__ == "__main__":
-    data = pd.read_csv("patients.csv", index_col="patient_id")
+numerical = ["chao1_before", "chao1_after", "shannon_before", "shannon_after", "observed_before", "observed_after", "ace_before", "ace_after", "berger_parker_before", "berger_parker_after", "read_count_before", "read_count_after"]
+categorical = ["enterotype_before", "enterotype_after", "treatment"]
 
-    subsetting(data)
 
-    g = sns.pairplot(data, diag_kind="kde", palette=["#F4F1DE","#AA3F22"])
+def draw_pairplots(data):
+    g = sns.pairplot(data, diag_kind="kde", palette=["#F4F1DE", "#AA3F22"])
     g.map_lower(sns.kdeplot, levels=4, color=".4")
-    plt.savefig("output/pairplots.svg")
+    plt.savefig("outputs/pictures/pairplots.svg")
     plt.close()
 
 
-
-    numerical = ["chao1_before", "chao1_after", "shannon_before", "shannon_after", "observed_before", "observed_after", "ace_before", "ace_after", "berger_parker_before", "berger_parker_after", "read_count_before", "read_count_after"]
-    categorical = ["enterotype_before", "enterotype_after", "treatment"]
-
-
-
+def draw_categorical_count(data):
     fig, ax = plt.subplots(1, 3, figsize=(20, 10))
     for variable, subplot in zip(categorical, ax.flatten()):
         sns.countplot(data[variable], ax=subplot)
         for label in subplot.get_xticklabels():
             label.set_rotation(90)
-    plt.savefig("output/categorical_count.svg")
+    plt.savefig("outputs/pictures/categorical_count.svg")
     plt.close()
 
 
-
-    with PdfPages("output/violin_plots.pdf") as pdf:
+def draw_violin_plots(data):
+    with PdfPages("outputs/pictures/violin_plots.pdf") as pdf:
         for metric in ["chao1", "shannon", "observed", "ace", "berger_parker"]:
             data_sub = data[["treatment", metric + "_before", metric + "_after"]].dropna()
 
@@ -87,20 +82,31 @@ if __name__ == "__main__":
             plt.close(fig)
 
 
-
+def draw_numerical_vs_categorical(data):
     fig, axs = plt.subplots(len(numerical), len(categorical), figsize=(50, 100))
     for i, numvar in enumerate(numerical):
         for j, catvar in enumerate(categorical):
             sns.boxplot(x=catvar, y=numvar, data=data, ax=axs[i][j])
-    plt.savefig("output/numerical_vs_categorical.svg", bbox_inches="tight")
+    plt.savefig("outputs/pictures/numerical_vs_categorical.svg", bbox_inches="tight")
     plt.close(fig)
 
 
-
+def draw_correlation(data):
     fig, ax = plt.subplots(figsize=(30, 30))
-    corr_df=data[numerical]
+    corr_df = data[numerical]
     corrMatrix = corr_df.corr()
     sns.heatmap(corrMatrix, annot=True)
-    sns.set(rc={'figure.figsize':(30,30)})
-    plt.savefig("output/corr.svg")
+    sns.set(rc={'figure.figsize': (30, 30)})
+    plt.savefig("outputs/pictures/corr.svg")
     plt.close(fig)
+
+
+if __name__ == "__main__":
+    data = pd.read_csv("outputs/tables/patients.csv", index_col="patient_id")
+
+    subsetting(data)
+    draw_pairplots(data)
+    draw_categorical_count(data)
+    draw_violin_plots(data)
+    draw_numerical_vs_categorical(data)
+    draw_correlation(data)

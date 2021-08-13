@@ -40,8 +40,8 @@ def parse_amrplusplus(filename):
 class Sample:
     def __init__(self, id):
         self.id = id
-        self.abundance = parse_bracken(os.path.join("bracken_output", id + ".bracken"))
-        self.resistome = parse_amrplusplus(os.path.join("amrplusplus_report", id + ".tsv"))
+        self.abundance = parse_bracken(os.path.join("outputs/bracken_output", id + ".bracken"))
+        self.resistome = parse_amrplusplus(os.path.join("outputs/amrplusplus_report", id + ".tsv"))
 
     def vectorize(self, keys, attr):
         m = getattr(self, attr)
@@ -322,12 +322,12 @@ def draw_rarefaction(samples, filename):
 
 
 if __name__ == "__main__":
-    patients = read_patients_from_csv("metadata.csv")
+    patients = read_patients_from_csv("outputs/metadata.csv")
 
-    print_abundance_table(get_all_samples(patients), "abundances.csv")
-    print_resistome_table(get_all_samples(patients), "resistomes.csv")
-    get_patient_table(patients).to_csv("patients.csv")
-    draw_enterotypes(patients, "enterotypes.svg")
-    draw_resistomes(patients, "resistomes.svg")
-    draw_helicobacter_abundance(patients, "helicobacter.svg")
-    draw_rarefaction(get_all_samples(patients), "rarefaction.svg")
+    print_abundance_table(get_all_samples(patients), "outputs/tables/abundances.csv")
+    print_resistome_table(get_all_samples(patients), "outputs/tables/resistomes.csv")
+    get_patient_table(patients).to_csv("outputs/tables/patients.csv")
+    draw_enterotypes(patients, "outputs/pictures/enterotypes.svg")
+    draw_resistomes(patients, "outputs/pictures/resistomes.svg")
+    draw_helicobacter_abundance(patients, "outputs/pictures/helicobacter.svg")
+    draw_rarefaction(get_all_samples(patients), "outputs/pictures/rarefaction.svg")
