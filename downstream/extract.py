@@ -1,18 +1,15 @@
-# TODO: This file shouldn't exist in a well planned program:
-#       * Bracken should be done before downstream analysis;
-#       * There should already be a file containing patient_id, sample_id_before, sample_id_after
-#         and various metadata instead of hacking it together from sample ids.
 import os
 import shutil
 import subprocess
 
 
-group_outputs_dir = os.path.join(os.getenv("GROUP"), "outputs")
+outputs_dir = os.path.join(os.getenv("GROUP"), "projects_real", "ERAF184")
 bracken_db_path = os.path.join(os.getenv("GROUP"), "databases", "full_ref_bafp", "database150mers.kmer_distrib")
 
 
 def get_all_sample_ids():
-    return sorted(list(filter(lambda x : x.startswith("LV"), os.listdir(group_outputs_dir))))
+    with open(os.path.join(outputs_dir, "samples.txt")) as f:
+        return [s.rstrip() for s in f]
 
 
 def print_metadata(output_filename):
@@ -34,27 +31,25 @@ def print_metadata(output_filename):
 
 
 def get_kraken_filename(sample_id):
-    sample_subdir = os.path.join(group_outputs_dir, sample_id)
-    for trial in os.listdir(sample_subdir):
-        kraken_dir = os.path.join(sample_subdir, trial, "kraken2")
-        if os.path.isdir(kraken_dir):
-            for s in ["1", "2", sample_id]:
-                kraken_filename = os.path.join(kraken_dir, s + ".kreport")
-                if os.path.isfile(kraken_filename):
-                    return kraken_filename
-            raise AssertionError("Can't find .kreport file in kraken2 subdirectory")
+    sample_subdir = os.path.join(outputs_dir, sample_id)
+    kraken_dir = os.path.join(sample_subdir, "kraken2")
+    if os.path.isdir(kraken_dir):
+        for s in ["1", "2", sample_id]:
+            kraken_filename = os.path.join(kraken_dir, s + ".kreport")
+            if os.path.isfile(kraken_filename):
+                return kraken_filename
+        raise AssertionError("Can't find .kreport file in kraken2 subdirectory")
     return None
 
 
 def get_amrplusplus_filename(sample_id):
-    sample_subdir = os.path.join(group_outputs_dir, sample_id)
-    for trial in os.listdir(sample_subdir):
-        amrplusplus_dir = os.path.join(sample_subdir, trial, "amrplusplus", "RunResistome")
-        if os.path.isdir(amrplusplus_dir):
-            for f in os.listdir(amrplusplus_dir):
-                if f.endswith(".mechanism.tsv"):
-                    return os.path.join(amrplusplus_dir, f)
-            raise AssertionError("Can't find .mechanism.tsv file im amrplusplus subdirectory")
+    sample_subdir = os.path.join(outputs_dir, sample_id)
+    amrplusplus_dir = os.path.join(sample_subdir, "amrplusplus", "RunResistome")
+    if os.path.isdir(amrplusplus_dir):
+        for f in os.listdir(amrplusplus_dir):
+            if f.endswith(".mechanism.tsv"):
+                return os.path.join(amrplusplus_dir, f)
+        raise AssertionError("Can't find .mechanism.tsv file im amrplusplus subdirectory")
     return None
 
 
@@ -72,6 +67,8 @@ def run_bracken(kraken_filename, output_filename, level):
 
 
 def create_bracken_reports():
+    if os.path.exists("bracken_output"):
+        shutil.rmtree("bracken_output")
     os.mkdir("bracken_output")
     for sample_id in get_all_sample_ids():
         kraken_filename = get_kraken_filename(sample_id)
@@ -84,6 +81,8 @@ def create_bracken_reports():
 
 
 def extract_amrplusplus_reports():
+    if os.path.exists("amrplusplus_report"):
+        shutil.rmtree("amrplusplus_report")
     os.mkdir("amrplusplus_report")
     for sample_id in get_all_sample_ids():
         amrplusplus_filename = get_amrplusplus_filename(sample_id)
