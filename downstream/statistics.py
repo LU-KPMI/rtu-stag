@@ -54,32 +54,34 @@ def draw_categorical_count(data):
 
 
 def draw_violin_plots(data):
-    with PdfPages("outputs/pictures/violin_plots.pdf") as pdf:
-        for metric in ["chao1", "shannon", "observed", "ace", "berger_parker"]:
-            data_sub = data[["treatment", metric + "_before", metric + "_after"]].dropna()
+    metrics = ["chao1", "shannon", "observed", "ace", "berger_parker"]
+    fig, axs = plt.subplots(nrows=1, ncols=len(metrics), figsize=(25, 5))
+    fig.suptitle("Alpha diversity")
+    for ax, metric in zip(axs, metrics):
+        data_sub = data[["treatment", metric + "_before", metric + "_after"]].dropna()
 
-            fig, axs = plt.subplots(3, 2, figsize=(10, 20))
-            max_y = max(max(data_sub[metric + "_before"]), max(data_sub[metric + "_after"]))
-            if max_y < 10:
-                max_y = math.ceil(max_y)
-            else:
-                max_y = math.ceil(max_y / 100) * 100
+        max_y = max(max(data_sub[metric + "_before"]), max(data_sub[metric + "_after"]))
+        if max_y < 10:
+            max_y = math.ceil(max_y)
+        else:
+            max_y = math.ceil(max_y / 100) * 100
 
-            fig.suptitle(metric)
+        d = []
+        labels = []
+        for time in [metric + "_before", metric + "_after"]:
+            for treatment in ["STD2", "STD3", "Control"]:
+                d.append(list(data_sub[data_sub["treatment"] == treatment][time]))
+                labels.append(time + " " + treatment)
 
-            axs[0][0].set_title("Before")
-            axs[0][1].set_title("After")
+        parts = ax.violinplot(d)
+        ax.set_xticks(range(1, 7))
+        ax.set_xticklabels(labels, rotation=90)
+        ax.set_title(metric)
+        for i, pc in enumerate(parts["bodies"]):
+            pc.set_facecolor(['red', 'green', 'blue'][i % 3])
 
-            for i, treatment in enumerate(["Control", "STD2", "STD3"]):
-                axs[i][0].violinplot(data_sub[metric + "_before"])
-                axs[i][1].violinplot(data_sub[metric + "_after"])
-
-                for ax in axs[i]:
-                    ax.set_ylim(0, max_y)
-                axs[i][0].set_ylabel(treatment)
-
-            pdf.savefig(fig)
-            plt.close(fig)
+    plt.savefig("outputs/pictures/violin_plots.svg", bbox_inches="tight")
+    plt.close(fig)
 
 
 def draw_numerical_vs_categorical(data):
