@@ -55,7 +55,7 @@ mkdir -p "$f"
 
 # Copy stag, samples and config file
 cp -r "${work_path}/stag-mwc" "$f"
-envsubst < "${work_path}/rtu-stag/hpc/config.yaml" > "$f/stag-mwc/config.yaml"
+envsubst < "${work_path}/rtu-stag/upstream/config.yaml" > "$f/stag-mwc/config.yaml"
 mkdir "$f/stag-mwc/input"
 cp $read_1 "$f/stag-mwc/input/${name}_1.fq.gz"
 cp $read_2 "$f/stag-mwc/input/${name}_2.fq.gz"

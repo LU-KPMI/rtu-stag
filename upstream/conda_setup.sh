@@ -45,7 +45,3 @@ conda activate R
 conda config --add channels defaults
 conda config --add channels bioconda
 conda config --add channels conda-forge
-echo "y" | conda install -c bioconda R
-Rscript -e 'install.packages("BiocManager", repos="https://cloud.r-project.org/")'
-Rscript -e 'BiocManager::install()'
-Rscript -e 'BiocManager::install("phyloseq")'

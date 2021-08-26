@@ -43,14 +43,6 @@ kraken2/kraken2-build --build --db full_ref --threads 32
 
 bracken-build -d /mnt/home/groups/lu_kpmi/full_ref -t 30 -k 35 -l 150
 
-# Build human reference database
-
-mkdir -p human_reference
-
-mv full_ref/taxonomy human_reference/taxonomy # this takes up around 30 gigs - if we can avoid downloading it again we should
-kraken2/kraken2-build --download-library human --db human_reference --threads 32 --use-ftp --no-masking
-kraken2/kraken2-build --build --db human_reference --threads 32
-
 # TODO: The code below is unchecked
 
 # # set up the new stag instance that we'll be using

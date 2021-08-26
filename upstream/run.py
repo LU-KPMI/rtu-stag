@@ -6,7 +6,6 @@ import sys
 import argparse
 import textwrap
 import subprocess
-import datetime
 
 group_dir = "/home/groups/lu_kpmi"
 
@@ -200,6 +199,10 @@ if __name__ == "__main__":
                 Diagnostics:
 
                 ./run.py diagnostics
+
+                Interactively choose samples and required analysis:
+
+                ./run.py
             '''))
     parser.set_defaults(func=interactive_mode)
     subparsers = parser.add_subparsers()
