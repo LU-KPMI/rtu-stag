@@ -9,6 +9,12 @@ mkdir outputs/pictures
 python3 extract.py
 echo "Setup done"
 
+for f in outputs/bracken_output/*kreport; do
+    python kreport_to_krona.py < $f > ${f%.kreport}.krona
+done
+ktImportText -o outputs/taxonomy.html outputs/bracken_output/*.krona
+echo "Taxonomy kronagraph generated"
+
 python3 process.py
 echo "Analysis done"
 

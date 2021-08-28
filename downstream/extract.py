@@ -53,17 +53,16 @@ def get_amrplusplus_filename(sample_id):
     return None
 
 
-def run_bracken(kraken_filename, output_filename, level):
+def run_bracken(kraken_filename, output_name, kreport_name, level):
     proc = subprocess.run(["../../Bracken/src/est_abundance.py",
         "-i", kraken_filename,
         "-k", bracken_db_path,
-        "-o", output_filename,
+        "-o", output_name,
         "-t", "1",
         "-l", level,
-        "--out-report", "./discard"])
+        "--out-report", kreport_name])
     if proc.returncode != 0:
         raise RuntimeError("Bracken failed")
-    os.remove("./discard")
 
 
 def create_bracken_reports():
@@ -74,8 +73,9 @@ def create_bracken_reports():
             print(sample_id, " missing kraken2, skipping sample")
             continue
 
-        out_name = os.path.join("outputs", "bracken_output", str(sample_id) + ".bracken")
-        run_bracken(kraken_filename, out_name, "G")
+        output_name = os.path.join("outputs", "bracken_output", str(sample_id) + ".bracken")
+        kreport_name = os.path.join("outputs", "bracken_output", str(sample_id) + ".kreport")
+        run_bracken(kraken_filename, output_name, kreport_name, "G")
 
 
 def extract_amrplusplus_reports():
