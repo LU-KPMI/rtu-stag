@@ -53,6 +53,24 @@ def get_amrplusplus_filename(sample_id):
     return None
 
 
+def create_amrplusplus_krona(input, output):
+    with open(input) as i:
+        with open(output, "w") as o:
+            first = True
+            for line in i:
+                if first:
+                    first = False
+                    continue
+                entries = line.rstrip().split(',')
+                count = entries[1].rstrip(".0")
+                full_name = entries[0].split('|')
+                if full_name[-1] == "RequiresSNPConfirmation":
+                    full_name.pop()
+                full_name.append(full_name[0])
+                full_name.pop(0)
+                print(count + "\t" + "\t".join(full_name), file=o)
+
+
 def run_bracken(kraken_filename, output_name, kreport_name, level):
     proc = subprocess.run(["../../Bracken/src/est_abundance.py",
         "-i", kraken_filename,
@@ -79,13 +97,17 @@ def create_bracken_reports():
 
 
 def extract_amrplusplus_reports():
-    os.mkdir("outputs/amrplusplus_report")
+    target_dir = os.path.join("outputs", "amrplusplus_report")
+    os.mkdir(target_dir)
     for sample_id in get_all_sample_ids():
         amrplusplus_filename = get_amrplusplus_filename(sample_id)
         if amrplusplus_filename == None:
             print(sample_id, " missing amrplusplus, skipping sample")
             continue
-        shutil.copyfile(amrplusplus_filename, os.path.join("outputs", "amrplusplus_report", str(sample_id) + ".tsv"))
+        shutil.copyfile(amrplusplus_filename, os.path.join(target_dir, str(sample_id) + ".tsv"))
+        amrplusplus_base = os.path.dirname(os.path.dirname(amrplusplus_filename))
+        create_amrplusplus_krona(os.path.join(amrplusplus_base, "ResistomeResults", "AMR_analytics_matrix.csv"),
+                                 os.path.join(target_dir, str(sample_id) + ".krona"))
 
 
 if __name__ == "__main__":

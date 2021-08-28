@@ -15,6 +15,9 @@ done
 ktImportText -o outputs/taxonomy.html outputs/bracken_output/*.krona
 echo "Taxonomy kronagraph generated"
 
+ktImportText -o outputs/resistomes.html outputs/amrplusplus_report/*.krona
+echo "Resistome kronagraph generated"
+
 python3 process.py
 echo "Analysis done"
 
