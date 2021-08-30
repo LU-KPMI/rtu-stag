@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from skbio.diversity import alpha
 import matplotlib.pyplot as plt
+from scipy.spatial.distance import pdist
+from scipy.cluster.hierarchy import linkage, dendrogram
 
 
 def parse_bracken(filename):
@@ -321,11 +323,26 @@ def draw_rarefaction(samples, filename):
     plt.close(fig)
 
 
+def print_beta_diversity(samples, filename):
+    all_otus = get_all_sample_keys(samples, "abundance")
+    m = np.array([s.vectorize(all_otus, "abundance") for s in samples])
+    d = pdist(m, "jensenshannon")
+    fig, ax = plt.subplots(figsize=(50, 50))
+    dendrogram(linkage(d, method="average"),
+               labels=[s.id for s in samples],
+               ax=ax,
+               orientation="right",
+               color_threshold=0)
+    ax.set_xticks([])
+    plt.savefig(filename, bbox_inches="tight")
+
+
 if __name__ == "__main__":
     patients = read_patients_from_csv("outputs/metadata.csv")
 
     print_abundance_table(get_all_samples(patients), "outputs/tables/abundances.csv")
     print_resistome_table(get_all_samples(patients), "outputs/tables/resistomes.csv")
+    print_beta_diversity(get_all_samples(patients), "outputs/pictures/beta_diversity.png")
     get_patient_table(patients).to_csv("outputs/tables/patients.csv")
     draw_enterotypes(patients, "outputs/pictures/enterotypes.svg")
     draw_resistomes(patients, "outputs/pictures/resistomes.svg")
